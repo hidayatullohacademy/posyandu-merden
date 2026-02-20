@@ -10,6 +10,7 @@ import {
     Syringe,
     Users,
     FileText,
+    Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +32,8 @@ const kaderMenuItems = [
     { label: 'Lansia', href: '/kader/lansia', icon: Heart },
     { label: 'Imunisasi', href: '/kader/imunisasi', icon: Syringe },
     { label: 'Jadwal', href: '/kader/jadwal', icon: CalendarDays },
-    { label: 'Pengaturan', href: '/kader/pengaturan', icon: Users },
+    { label: 'Ortu', href: '/kader/ortu', icon: Users },
+    { label: 'Pengaturan', href: '/kader/pengaturan', icon: Settings },
 ];
 
 const ortuMenuItems = [

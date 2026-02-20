@@ -17,8 +17,9 @@ const BULAN_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
 
 export default function AdminLaporanPage() {
     const now = new Date();
-    const [bulan, setBulan] = useState(now.getMonth() + 1);
-    const [tahun, setTahun] = useState(now.getFullYear());
+    const [periode, setPeriode] = useState(now.toISOString().slice(0, 7));
+    const bulan = parseInt(periode.split('-')[1]);
+    const tahun = parseInt(periode.split('-')[0]);
     const [reportType, setReportType] = useState<ReportType>('balita');
     const [isGenerating, setIsGenerating] = useState(false);
     const [stats, setStats] = useState({
@@ -57,7 +58,7 @@ export default function AdminLaporanPage() {
     useEffect(() => {
         loadStats();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [bulan, tahun]);
+    }, [periode]);
 
     const handleExport = async () => {
         setIsGenerating(true);
@@ -327,27 +328,17 @@ export default function AdminLaporanPage() {
                                     </div>
                                 </div>
 
-                                {/* Period Selectors */}
-                                <div className="grid grid-cols-2 gap-4 pt-1">
+                                {/* Period Selector */}
+                                <div className="pt-1">
                                     <div className="space-y-1.5 border border-slate-200 p-1.5 rounded-xl bg-slate-50">
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 pt-1">Bulan</label>
-                                        <select
-                                            value={bulan}
-                                            onChange={(e) => setBulan(parseInt(e.target.value))}
-                                            className="w-full bg-transparent border-none text-sm font-bold text-slate-800 focus:ring-0 cursor-pointer"
-                                        >
-                                            {BULAN_OPTIONS.map((b) => (<option key={b.value} value={b.value}>{b.label}</option>))}
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1.5 border border-slate-200 p-1.5 rounded-xl bg-slate-50">
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 pt-1">Tahun</label>
-                                        <select
-                                            value={tahun}
-                                            onChange={(e) => setTahun(parseInt(e.target.value))}
-                                            className="w-full bg-transparent border-none text-sm font-bold text-slate-800 focus:ring-0 cursor-pointer"
-                                        >
-                                            {[2024, 2025, 2026].map((y) => (<option key={y} value={y}>{y}</option>))}
-                                        </select>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 pt-1">Periode Laporan</label>
+                                        <input
+                                            type="month"
+                                            value={periode}
+                                            onChange={(e) => setPeriode(e.target.value)}
+                                            className="w-full bg-slate-50 border-none text-sm font-bold text-slate-800 focus:ring-0 cursor-pointer px-2 py-1.5"
+                                            required
+                                        />
                                     </div>
                                 </div>
 

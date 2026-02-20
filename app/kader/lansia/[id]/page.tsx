@@ -58,7 +58,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
         berat_badan: '', tinggi_badan: '', lingkar_perut: '',
         sistolik: '', diastolik: '', gula_darah: '', kolesterol: '', asam_urat: '',
         perlu_rujukan: false, keluhan: '', catatan: '',
-        bulan: now.getMonth() + 1, tahun: now.getFullYear(),
+        periode_kunjungan: now.toISOString().slice(0, 7),
     });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -122,8 +122,8 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
             const { error } = await supabase.from('kunjungan_lansia').insert({
                 lansia_id: id,
                 posyandu_id: lansia!.posyandu_id,
-                bulan: formData.bulan,
-                tahun: formData.tahun,
+                bulan: parseInt(formData.periode_kunjungan.split('-')[1]),
+                tahun: parseInt(formData.periode_kunjungan.split('-')[0]),
                 berat_badan: bb,
                 tinggi_badan: tb,
                 lingkar_perut: lingkarPerut,
@@ -151,7 +151,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 berat_badan: '', tinggi_badan: '', lingkar_perut: '',
                 sistolik: '', diastolik: '', gula_darah: '', kolesterol: '', asam_urat: '',
                 perlu_rujukan: false, keluhan: '', catatan: '',
-                bulan: now.getMonth() + 1, tahun: now.getFullYear(),
+                periode_kunjungan: now.toISOString().slice(0, 7),
             });
             fetchData();
         } catch {
@@ -362,19 +362,15 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                             <form id="kunjunganLansiaForm" onSubmit={handleSubmitKunjungan} className="space-y-6">
 
                                 {/* Waktu */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Bulan</label>
-                                        <select value={formData.bulan} onChange={(e) => setFormData(prev => ({ ...prev, bulan: parseInt(e.target.value) }))} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                                            {BULAN_NAMES.slice(1).map((name, i) => (<option key={i + 1} value={i + 1}>{name}</option>))}
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Tahun</label>
-                                        <select value={formData.tahun} onChange={(e) => setFormData(prev => ({ ...prev, tahun: parseInt(e.target.value) }))} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                                            {[2024, 2025, 2026].map(y => (<option key={y} value={y}>{y}</option>))}
-                                        </select>
-                                    </div>
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Bulan & Tahun Kunjungan</label>
+                                    <input
+                                        type="month"
+                                        value={formData.periode_kunjungan}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, periode_kunjungan: e.target.value }))}
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                                        required
+                                    />
                                 </div>
 
                                 {/* Antropometri */}

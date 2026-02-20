@@ -57,8 +57,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
         vitamin_a: false,
         obat_cacing: false,
         catatan: '',
-        bulan: now.getMonth() + 1,
-        tahun: now.getFullYear(),
+        periode_kunjungan: now.toISOString().slice(0, 7),
     });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -118,8 +117,8 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             const { error } = await supabase.from('kunjungan_balita').insert({
                 balita_id: id,
                 posyandu_id: balita!.posyandu_id,
-                bulan: formData.bulan,
-                tahun: formData.tahun,
+                bulan: parseInt(formData.periode_kunjungan.split('-')[1]),
+                tahun: parseInt(formData.periode_kunjungan.split('-')[0]),
                 berat_badan: bb,
                 tinggi_badan: tb,
                 lingkar_kepala: formData.lingkar_kepala ? parseFloat(formData.lingkar_kepala) : null,
@@ -145,7 +144,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             setFormData({
                 berat_badan: '', tinggi_badan: '', lingkar_kepala: '', lingkar_lengan: '',
                 vitamin_a: false, obat_cacing: false, catatan: '',
-                bulan: now.getMonth() + 1, tahun: now.getFullYear(),
+                periode_kunjungan: now.toISOString().slice(0, 7),
             });
             fetchData();
         } catch {
@@ -343,31 +342,15 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                         </div>
 
                         <form onSubmit={handleSubmitKunjungan} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1.5">
-                                    <label className="block text-sm font-medium text-slate-700">Bulan</label>
-                                    <select
-                                        value={formData.bulan}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, bulan: parseInt(e.target.value) }))}
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-                                    >
-                                        {BULAN_NAMES.slice(1).map((name, i) => (
-                                            <option key={i + 1} value={i + 1}>{name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="block text-sm font-medium text-slate-700">Tahun</label>
-                                    <select
-                                        value={formData.tahun}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, tahun: parseInt(e.target.value) }))}
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-                                    >
-                                        {[2024, 2025, 2026].map(y => (
-                                            <option key={y} value={y}>{y}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-slate-700">Bulan & Tahun Kunjungan</label>
+                                <input
+                                    type="month"
+                                    value={formData.periode_kunjungan}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, periode_kunjungan: e.target.value }))}
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+                                    required
+                                />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">

@@ -9,7 +9,11 @@ RETURNS TRIGGER AS $$
 DECLARE
     imun_record RECORD;
     schedule_date DATE;
+    v_user_id UUID;
 BEGIN
+    -- Get current authenticated user id
+    v_user_id := auth.uid();
+    
     -- Loop through all active vaccines in master_imunisasi
     FOR imun_record IN 
         SELECT id, usia_bulan
@@ -31,7 +35,7 @@ BEGIN
             imun_record.id,
             schedule_date,
             'BELUM',
-            NEW.dicatat_oleh
+            v_user_id
         );
     END LOOP;
 

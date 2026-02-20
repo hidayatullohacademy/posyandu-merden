@@ -165,8 +165,9 @@ export default function KaderBalitaPage() {
             setShowForm(false);
             setFormData({ nik: '', nama: '', nama_ibu: '', tanggal_lahir: '', jenis_kelamin: '' });
             fetchBalita();
-        } catch {
-            toast.error('Gagal mendaftarkan balita');
+        } catch (error: any) {
+            console.error("Gagal mendaftar balita:", error);
+            toast.error(error.message || 'Gagal mendaftarkan balita');
         } finally {
             setIsSaving(false);
         }

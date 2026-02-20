@@ -43,7 +43,7 @@ export default function KaderDashboard() {
                         </div>
                     </div>
                     <p className="text-sm font-medium text-teal-50">Jadwal Hari Ini</p>
-                    <h3 className="text-lg font-bold mt-1">Posyandu Flamboyan</h3>
+                    <h3 className="text-lg font-bold mt-1">Posyandu Lestari 1</h3>
                 </div>
 
                 <div className="min-w-[160px] flex-shrink-0 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
@@ -158,7 +158,7 @@ export default function KaderDashboard() {
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold text-slate-800">Jadwal Paling Dekat</p>
-                                    <p className="text-xs text-slate-500">12 Nov 2025 - Posyandu Melati</p>
+                                    <p className="text-xs text-slate-500">12 Nov 2025 - Posyandu Lestari 1</p>
                                 </div>
                             </div>
                             <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -178,6 +178,6 @@ export default function KaderDashboard() {
                     scrollbar-width: none;
                 }
             `}} />
-        </div>
+        </div >
     );
 }

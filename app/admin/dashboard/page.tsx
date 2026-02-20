@@ -205,7 +205,7 @@ export default function AdminDashboard() {
                                         <span className="text-sm font-black -mt-1">12</span>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-800">Posyandu Flamboyan (Balita & Lansia)</p>
+                                        <p className="text-sm font-bold text-slate-800">Posyandu Lestari 1 (Balita & Lansia)</p>
                                         <p className="text-[10px] font-medium text-slate-500 mt-0.5">Diusulkan oleh Kader: Ratna • 2 jam lalu</p>
                                     </div>
                                 </div>
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
                                 <div className="mt-0.5 h-2 w-2 rounded-full bg-teal-500 flex-shrink-0" />
                                 <div>
                                     <p className="text-xs font-bold text-slate-700">14 Teks WA Siap Kirim</p>
-                                    <p className="text-[10px] text-slate-500 mt-0.5">Teks reminder H-1 kunjungan Posyandu Melati telah dibuat otomatis.</p>
+                                    <p className="text-[10px] text-slate-500 mt-0.5">Teks reminder H-1 kunjungan Posyandu Lestari 2 telah dibuat otomatis.</p>
                                     <Link href="/admin/notifikasi" className="text-[10px] font-bold text-teal-600 hover:underline mt-1 inline-block">Buka Notifikasi</Link>
                                 </div>
                             </div>
@@ -262,7 +262,7 @@ export default function AdminDashboard() {
                             </h2>
                             <p className="text-xs text-slate-300 leading-relaxed font-medium mb-4">
                                 Tingkat kehadiran Balita mencapai <span className="text-white font-bold">88%</span> bulan ini.
-                                Posyandu Anggrek mencatat kunjungan tertinggi.
+                                Posyandu Lestari 3 mencatat kunjungan tertinggi.
                             </p>
                             <Link href="/admin/laporan" className="inline-flex items-center justify-center w-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2.5 rounded-lg border border-white/10 transition-colors">
                                 Lihat Laporan Lengkap <ChevronRight className="h-3 w-3 ml-1" />

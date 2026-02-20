@@ -373,7 +373,7 @@ export default function AdminPengaturanPage() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <Input
                                 label="Nama Posyandu"
-                                placeholder="Contoh: Posyandu Melati 1"
+                                placeholder="Contoh: Posyandu Lestari 1"
                                 value={formData.nama}
                                 onChange={e => handleFormChange('nama', e.target.value)}
                                 error={formErrors.nama}

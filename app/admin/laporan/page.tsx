@@ -78,7 +78,8 @@ export default function AdminLaporanPage() {
 
                 if (error) throw error;
 
-                data = (kunjunganData || []).map((k, i) => ({
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data = (kunjunganData || []).map((k: any, i: number) => ({
                     'No': i + 1,
                     'Nama': (k.balita as { nama: string })?.nama || '',
                     'Nama Ibu': (k.balita as { nama_ibu: string })?.nama_ibu || '',
@@ -104,7 +105,8 @@ export default function AdminLaporanPage() {
 
                 if (error) throw error;
 
-                data = (kunjunganData || []).map((k, i) => ({
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data = (kunjunganData || []).map((k: any, i: number) => ({
                     'No': i + 1,
                     'Nama': (k.lansia as { nama_lengkap: string })?.nama_lengkap || '',
                     'JK': (k.lansia as { jenis_kelamin: string })?.jenis_kelamin || '',

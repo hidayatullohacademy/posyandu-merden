@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Shield, Home } from 'lucide-react';
 
+export const dynamic = 'force-static';
+
 export default function NotFound() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">

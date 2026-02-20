@@ -9,11 +9,13 @@ export const config = {
     matcher: [
         /*
          * Match all request paths except for the ones starting with:
+         * - api (API routes)
          * - _next/static (static files)
          * - _next/image (image optimization files)
+         * - _not-found (system not found)
          * - favicon.ico (favicon file)
-         * - public files (icons, manifest, sw.js)
+         * - icons, manifest.json, sw.js (public files)
          */
-        '/((?!api|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|_not-found|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!api|_next/static|_next/image|_not-found|favicon.ico|icons|manifest.json|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 };

@@ -40,7 +40,8 @@ export default function OrtuImunisasiPage() {
             const { data: links } = await supabase.from('orang_tua_balita').select('balita_id').eq('user_id', user.id);
             if (!links || links.length === 0) { setIsLoading(false); return; }
 
-            const balitaIds = links.map(l => l.balita_id);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const balitaIds = links.map((l: any) => l.balita_id);
 
             const [masterRes, balitaRes, recordsRes] = await Promise.all([
                 supabase.from('master_imunisasi').select('*').order('usia_pemberian_bulan'),
@@ -51,11 +52,13 @@ export default function OrtuImunisasiPage() {
             if (masterRes.error) throw masterRes.error;
             setMasterList(masterRes.data || []);
 
-            const children = (balitaRes.data || []).map(b => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const children = (balitaRes.data || []).map((b: any) => ({
                 balitaId: b.id,
                 balitaNama: b.nama,
                 tanggalLahir: b.tanggal_lahir,
-                records: (recordsRes.data || []).filter(r => r.balita_id === b.id),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                records: (recordsRes.data || []).filter((r: any) => r.balita_id === b.id),
             }));
             setChildrenData(children);
         } catch {

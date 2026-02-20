@@ -48,7 +48,8 @@ export default function OrtuAnakPage() {
                 return;
             }
 
-            const balitaIds = links.map((l) => l.balita_id);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const balitaIds = links.map((l: any) => l.balita_id);
             const { data: balitaData, error } = await supabase
                 .from('balita')
                 .select('*')
@@ -59,7 +60,8 @@ export default function OrtuAnakPage() {
 
             // Get latest kunjungan for each balita
             const anakWithKunjungan = await Promise.all(
-                (balitaData || []).map(async (b) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (balitaData || []).map(async (b: any) => {
                     const { data: kunjunganData } = await supabase
                         .from('kunjungan_balita')
                         .select('berat_badan, tinggi_badan, bulan, tahun')

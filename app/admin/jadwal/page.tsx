@@ -23,7 +23,7 @@ interface JadwalItem {
     created_by?: string;
 }
 
-interface PosyanduItem { id: string; nama: string; }
+interface PosyanduItem { id: string; nama: string; hari_buka?: string; alamat?: string; }
 
 const STATUS_COLORS: Record<string, string> = {
     DIUSULKAN: 'bg-amber-50 text-amber-600 border-amber-200',
@@ -45,6 +45,34 @@ export default function AdminJadwalPage() {
         jenis: 'BALITA', lokasi: '', keterangan: '', posyandu_id: '',
     });
 
+    const handlePosyanduChange = (posyanduId: string) => {
+        const selected = posyanduList.find(p => p.id === posyanduId);
+
+        if (selected) {
+            let nextDate = '';
+            if (selected.hari_buka) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = today.getMonth();
+                const dayStr = selected.hari_buka.padStart(2, '0');
+
+                // If today is past the default date, we can either set it to next month or current month.
+                // Let's set it to current month default
+                const defaultDate = new Date(year, month, parseInt(selected.hari_buka));
+                nextDate = defaultDate.toISOString().split('T')[0];
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                posyandu_id: posyanduId,
+                tanggal: nextDate || prev.tanggal,
+                lokasi: selected.alamat || prev.lokasi
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, posyandu_id: posyanduId }));
+        }
+    };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchData(); }, []);
 
@@ -53,7 +81,7 @@ export default function AdminJadwalPage() {
         try {
             const [jRes, pRes] = await Promise.all([
                 supabase.from('jadwal_posyandu').select('*, posyandu:posyandu_id(nama)').order('tanggal', { ascending: false }),
-                supabase.from('posyandu').select('id, nama').order('nama'),
+                supabase.from('posyandu').select('id, nama, hari_buka, alamat').order('nama'),
             ]);
             if (jRes.error) throw jRes.error;
             setJadwalList(jRes.data || []);
@@ -232,7 +260,7 @@ export default function AdminJadwalPage() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-1.5">
                                 <label className="block text-sm font-medium text-slate-700">Posyandu</label>
-                                <select value={formData.posyandu_id} onChange={(e) => setFormData(p => ({ ...p, posyandu_id: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" required>
+                                <select value={formData.posyandu_id} onChange={(e) => handlePosyanduChange(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" required>
                                     <option value="">Pilih posyandu...</option>
                                     {posyanduList.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
                                 </select>

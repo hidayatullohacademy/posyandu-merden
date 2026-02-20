@@ -31,6 +31,7 @@ const kaderMenuItems = [
     { label: 'Lansia', href: '/kader/lansia', icon: Heart },
     { label: 'Imunisasi', href: '/kader/imunisasi', icon: Syringe },
     { label: 'Jadwal', href: '/kader/jadwal', icon: CalendarDays },
+    { label: 'Pengaturan', href: '/kader/pengaturan', icon: Users },
 ];
 
 const ortuMenuItems = [

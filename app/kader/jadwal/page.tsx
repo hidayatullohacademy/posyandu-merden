@@ -49,11 +49,35 @@ export default function KaderJadwalPage() {
         try {
             const { data, error } = await supabase
                 .from('jadwal_posyandu')
-                .select('*, posyandu:posyandu_id(nama)')
+                .select('*, posyandu:posyandu_id(nama, alamat, hari_buka)')
                 .order('tanggal', { ascending: false });
 
             if (error) throw error;
             setJadwalList(data || []);
+
+            // fetch user's posyandu
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: userData } = await supabase.from('users').select('posyandu_id').eq('id', user.id).single();
+                if (userData?.posyandu_id) {
+                    const { data: posData } = await supabase.from('posyandu').select('alamat, hari_buka').eq('id', userData.posyandu_id).single();
+                    if (posData) {
+                        let nextDate = '';
+                        if (posData.hari_buka) {
+                            const today = new Date();
+                            const year = today.getFullYear();
+                            const month = today.getMonth();
+                            const defaultDate = new Date(year, month, parseInt(posData.hari_buka));
+                            nextDate = defaultDate.toISOString().split('T')[0];
+                        }
+                        setFormData(prev => ({
+                            ...prev,
+                            tanggal: nextDate,
+                            lokasi: posData.alamat || '',
+                        }));
+                    }
+                }
+            }
         } catch {
             toast.error('Gagal memuat jadwal');
         } finally {

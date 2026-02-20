@@ -1,0 +1,9 @@
+app/admin/laporan/page.tsx(185,38): error TS2304: Cannot find name 'Baby'.
+app/admin/laporan/page.tsx(199,38): error TS2304: Cannot find name 'Heart'.
+app/admin/laporan/page.tsx(223,63): error TS2304: Cannot find name 'Baby'.
+app/admin/laporan/page.tsx(244,63): error TS2304: Cannot find name 'Heart'.
+app/admin/laporan/page.tsx(296,46): error TS2304: Cannot find name 'Baby'.
+app/admin/laporan/page.tsx(309,46): error TS2304: Cannot find name 'Heart'.
+app/kader/lansia/[id]/page.tsx(164,25): error TS2304: Cannot find name 'useMemo'.
+app/kader/lansia/[id]/page.tsx(385,42): error TS2304: Cannot find name 'currentIMT'.
+app/kader/lansia/[id]/page.tsx(392,55): error TS2304: Cannot find name 'currentIMT'.

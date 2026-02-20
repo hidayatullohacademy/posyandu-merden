@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# diagnostic & logs
+*_errors_*.txt
+*_out*.txt
+build_log.txt
+.gemini/

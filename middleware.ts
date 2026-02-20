@@ -14,6 +14,6 @@ export const config = {
          * - favicon.ico (favicon file)
          * - public files (icons, manifest, sw.js)
          */
-        '/((?!_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|_not-found|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 };

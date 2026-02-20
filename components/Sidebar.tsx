@@ -36,10 +36,8 @@ export function Sidebar() {
 
     // Close sidebar on route change (mobile)
     useEffect(() => {
-        if (isOpen) {
-            queueMicrotask(() => setIsOpen(false));
-        }
-    }, [pathname, isOpen]);
+        setIsOpen(false);
+    }, [pathname]);
 
     const handleLogout = async () => {
         await supabase.auth.signOut();

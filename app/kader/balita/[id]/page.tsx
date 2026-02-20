@@ -49,6 +49,8 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const supabase = createClient();
 
     const now = new Date();
+    // Default val date: 'YYYY-MM-DD' taking local timezone into account
+    const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     const [formData, setFormData] = useState({
         berat_badan: '',
         tinggi_badan: '',
@@ -57,7 +59,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
         vitamin_a: false,
         obat_cacing: false,
         catatan: '',
-        periode_kunjungan: now.toISOString().slice(0, 7),
+        periode_kunjungan: localDate,
     });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -117,6 +119,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             const { error } = await supabase.from('kunjungan_balita').insert({
                 balita_id: id,
                 posyandu_id: balita!.posyandu_id,
+                tanggal_kunjungan: formData.periode_kunjungan, // record absolute date value
                 bulan: parseInt(formData.periode_kunjungan.split('-')[1]),
                 tahun: parseInt(formData.periode_kunjungan.split('-')[0]),
                 berat_badan: bb,
@@ -144,7 +147,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             setFormData({
                 berat_badan: '', tinggi_badan: '', lingkar_kepala: '', lingkar_lengan: '',
                 vitamin_a: false, obat_cacing: false, catatan: '',
-                periode_kunjungan: now.toISOString().slice(0, 7),
+                periode_kunjungan: localDate,
             });
             fetchData();
         } catch {
@@ -343,9 +346,9 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
 
                         <form onSubmit={handleSubmitKunjungan} className="space-y-4">
                             <div className="space-y-1.5">
-                                <label className="block text-sm font-medium text-slate-700">Bulan & Tahun Kunjungan</label>
+                                <label className="block text-sm font-medium text-slate-700">Tanggal Kunjungan</label>
                                 <input
-                                    type="month"
+                                    type="date"
                                     value={formData.periode_kunjungan}
                                     onChange={(e) => setFormData(prev => ({ ...prev, periode_kunjungan: e.target.value }))}
                                     className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"

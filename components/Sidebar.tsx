@@ -46,27 +46,6 @@ export function Sidebar() {
 
     return (
         <>
-            {/* Mobile Header (Light theme for top bar to blend with main content in mobile) */}
-            <div className="sticky top-0 z-[100] h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:hidden animate-fade-in pointer-events-auto shadow-sm">
-                <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-slate-900 rounded-lg shadow-sm">
-                        <Shield className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="font-bold text-slate-800 text-sm">Posyandu ILP</span>
-                </div>
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setIsOpen(true);
-                    }}
-                    className="p-3 -mr-2 text-slate-600 hover:bg-slate-100 active:scale-95 transition-all rounded-xl cursor-pointer relative z-[110] touch-manipulation flex items-center justify-center outline-none focus:ring-2 focus:ring-teal-500/20"
-                    aria-label="Buka Menu"
-                >
-                    <Menu className="h-7 w-7" />
-                </button>
-            </div>
-
             {/* Overlay */}
             {isOpen && (
                 <div

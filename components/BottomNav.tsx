@@ -8,12 +8,22 @@ import {
     Heart,
     CalendarDays,
     Syringe,
+    Users,
+    FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
-    role: 'KADER' | 'ORANG_TUA';
+    role: 'KADER' | 'ORANG_TUA' | 'ADMIN';
 }
+
+const adminMenuItems = [
+    { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'Laporan', href: '/admin/laporan', icon: FileText },
+    { label: 'Jadwal', href: '/admin/jadwal', icon: CalendarDays },
+    { label: 'Pengguna', href: '/admin/pengguna', icon: Users },
+    { label: 'Imunisasi', href: '/admin/imunisasi', icon: Syringe },
+];
 
 const kaderMenuItems = [
     { label: 'Beranda', href: '/kader/dashboard', icon: LayoutDashboard },
@@ -32,7 +42,10 @@ const ortuMenuItems = [
 
 export function BottomNav({ role }: BottomNavProps) {
     const pathname = usePathname();
-    const menuItems = role === 'KADER' ? kaderMenuItems : ortuMenuItems;
+    const menuItems =
+        role === 'ADMIN' ? adminMenuItems :
+            role === 'KADER' ? kaderMenuItems :
+                ortuMenuItems;
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/80 backdrop-blur-xl border-t border-slate-100 safe-area-bottom">

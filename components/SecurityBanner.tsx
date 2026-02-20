@@ -44,7 +44,7 @@ export function SecurityBanner() {
     if (!isVisible || isLoading) return null;
 
     return (
-        <div className="bg-amber-500 text-white px-4 py-2.5 flex items-center justify-between gap-3 animate-slide-down sticky top-0 z-[60] shadow-lg">
+        <div className="bg-amber-500 text-white px-4 py-2.5 flex items-center justify-between gap-3 animate-slide-down relative z-[60] shadow-lg">
             <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-1.5 rounded-lg shrink-0">
                     <ShieldAlert className="h-4 w-4 text-white" />

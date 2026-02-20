@@ -49,7 +49,7 @@ export function Sidebar() {
     return (
         <>
             {/* Mobile Header (Light theme for top bar to blend with main content in mobile) */}
-            <div className="fixed top-0 left-0 right-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 md:hidden animate-fade-in">
+            <div className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 md:hidden animate-fade-in">
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-slate-900 rounded-lg shadow-sm">
                         <Shield className="h-4 w-4 text-white" />

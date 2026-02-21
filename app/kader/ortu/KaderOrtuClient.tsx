@@ -1,20 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Plus, Search, X, Shield, UserCheck } from 'lucide-react';
+import { Users, Plus, Search, X, Shield, UserCheck, Baby, ChevronDown, Check } from 'lucide-react';
+import { createClient } from '@/lib/supabase';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
-interface BasicUser {
+created_at: string;
+}
+
+interface BalitaOption {
     id: string;
-    nama_lengkap: string;
-    no_hp: string;
-    nik: string;
-    is_active: boolean;
-    created_at: string;
+    nama: string;
+    nama_ibu: string;
 }
 
 export default function KaderOrtuClient() {
@@ -30,8 +31,12 @@ export default function KaderOrtuClient() {
         no_hp: '',
         nik: '',
         rt: '',
-        rw: ''
+        rw: '',
+        balita_ids: [] as string[]
     });
+    const [balitaList, setBalitaList] = useState<BalitaOption[]>([]);
+    const [showBalitaSelector, setShowBalitaSelector] = useState(false);
+    const supabase = createClient();
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,13 +59,17 @@ export default function KaderOrtuClient() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch('/api/kader/ortu/list');
-            const result = await res.json();
+            const [userRes, balitaRes] = await Promise.all([
+                fetch('/api/kader/ortu/list'),
+                supabase.from('balita').select('id, nama, nama_ibu').eq('is_active', true).order('nama')
+            ]);
 
-            if (!res.ok) throw new Error(result.error || 'Gagal memuat data');
+            const userData = await userRes.json();
+            if (!userRes.ok) throw new Error(userData.error || 'Gagal memuat data orang tua');
 
-            setUsers(result.data || []);
-            setFilteredUsers(result.data || []);
+            setUsers(userData.data || []);
+            setFilteredUsers(userData.data || []);
+            setBalitaList(balitaRes.data || []);
         } catch (e: any) {
             toast.error(e.message || 'Gagal terhubung ke database');
         } finally {
@@ -81,6 +90,7 @@ export default function KaderOrtuClient() {
         // rt and rw optional for db but enforced in UI here as requested by user scenario
         if (!formData.rt.trim()) errors.rt = 'RT wajib diisi';
         if (!formData.rw.trim()) errors.rw = 'RW wajib diisi';
+        if (formData.balita_ids.length === 0) errors.balita = 'Minimal pilih satu balita';
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -115,10 +125,21 @@ export default function KaderOrtuClient() {
         }
     };
 
+    const toggleBalita = (id: string) => {
+        setFormData(prev => {
+            const ids = prev.balita_ids.includes(id)
+                ? prev.balita_ids.filter(i => i !== id)
+                : [...prev.balita_ids, id];
+            return { ...prev, balita_ids: ids };
+        });
+        if (formErrors.balita) setFormErrors(prev => ({ ...prev, balita: '' }));
+    };
+
     const closeForm = () => {
         setShowForm(false);
-        setFormData({ nama_lengkap: '', no_hp: '', nik: '', rt: '', rw: '' });
+        setFormData({ nama_lengkap: '', no_hp: '', nik: '', rt: '', rw: '', balita_ids: [] });
         setFormErrors({});
+        setShowBalitaSelector(false);
     };
 
     return (
@@ -233,6 +254,75 @@ export default function KaderOrtuClient() {
                             <div className="grid grid-cols-2 gap-3">
                                 <Input label="RT" placeholder="Contoh: 01" type="number" value={formData.rt} onChange={(e) => handleFormChange('rt', e.target.value)} error={formErrors.rt} />
                                 <Input label="RW" placeholder="Contoh: 05" type="number" value={formData.rw} onChange={(e) => handleFormChange('rw', e.target.value)} error={formErrors.rw} />
+                            </div>
+
+                            {/* Balita Selector */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-700">Pilih Anak (Balita)</label>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowBalitaSelector(!showBalitaSelector)}
+                                        className={cn(
+                                            "w-full flex items-center justify-between px-4 py-3 bg-white border rounded-xl text-sm transition-all text-left",
+                                            formErrors.balita ? "border-red-500" : "border-slate-200 hover:border-slate-300"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <Baby className="h-4 w-4 text-slate-400 shrink-0" />
+                                            <span className={cn("truncate", formData.balita_ids.length === 0 ? "text-slate-400" : "text-slate-700 font-medium")}>
+                                                {formData.balita_ids.length === 0
+                                                    ? 'Klik untuk memilih balita'
+                                                    : `${formData.balita_ids.length} balita dipilih`}
+                                            </span>
+                                        </div>
+                                        <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", showBalitaSelector && "rotate-180")} />
+                                    </button>
+
+                                    {showBalitaSelector && (
+                                        <div className="absolute z-10 w-full mt-2 bg-white border border-slate-100 rounded-xl shadow-xl max-h-60 overflow-y-auto p-2 space-y-1 animate-in fade-in slide-in-from-top-2">
+                                            {balitaList.length === 0 ? (
+                                                <div className="p-4 text-center">
+                                                    <p className="text-xs text-slate-400">Belum ada data balita. Daftarkan balita terlebih dahulu.</p>
+                                                </div>
+                                            ) : (
+                                                balitaList.map(balita => (
+                                                    <button
+                                                        key={balita.id}
+                                                        type="button"
+                                                        onClick={() => toggleBalita(balita.id)}
+                                                        className={cn(
+                                                            "w-full flex items-center justify-between p-3 rounded-lg text-sm transition-colors",
+                                                            formData.balita_ids.includes(balita.id)
+                                                                ? "bg-blue-50 text-blue-700"
+                                                                : "hover:bg-slate-50 text-slate-600"
+                                                        )}
+                                                    >
+                                                        <div className="text-left">
+                                                            <p className="font-bold">{balita.nama}</p>
+                                                            <p className="text-[10px] opacity-70">Ibu: {balita.nama_ibu}</p>
+                                                        </div>
+                                                        {formData.balita_ids.includes(balita.id) && <Check className="h-4 w-4" />}
+                                                    </button>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                {formErrors.balita && <p className="text-xs text-red-500 font-medium ml-1">{formErrors.balita}</p>}
+                                {formData.balita_ids.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                        {formData.balita_ids.map(id => {
+                                            const b = balitaList.find(x => x.id === id);
+                                            return b ? (
+                                                <span key={id} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-bold">
+                                                    {b.nama}
+                                                    <button type="button" onClick={() => toggleBalita(id)}><X className="h-2.5 w-2.5" /></button>
+                                                </span>
+                                            ) : null;
+                                        })}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="p-4 bg-sky-50 border border-sky-100 rounded-xl flex gap-3 text-sky-800 mt-6">

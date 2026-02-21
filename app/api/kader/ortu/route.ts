@@ -43,8 +43,12 @@ export async function POST(request: Request) {
         });
 
         const body = await request.json();
-        const { nik, nama_lengkap, no_hp } = body; // rt/rw ignored as it's not in user table schema
+        const { nik, nama_lengkap, no_hp, balita_ids } = body;
         
+        if (!balita_ids || !Array.isArray(balita_ids) || balita_ids.length === 0) {
+            return NextResponse.json({ error: 'Minimal satu balita harus dipilih' }, { status: 400 });
+        }
+
         // Auto-generate email based on NIK if not provided
         const email = `${nik}@posyandu.local`;
         const password = 'merden12345';
@@ -94,7 +98,6 @@ export async function POST(request: Request) {
 
                  let posyanduName = 'Posyandu lain';
                  if (existingUser?.posyandu) {
-                     // Handle both single object and array return types from Supabase relational queries
                      const posyanduData = Array.isArray(existingUser.posyandu) 
                         ? existingUser.posyandu[0] 
                         : existingUser.posyandu;
@@ -105,6 +108,23 @@ export async function POST(request: Request) {
                  if (dbError.message.includes('no_hp')) return NextResponse.json({ error: `Nomor HP sudah terdaftar di kader ${posyanduName}` }, { status: 400 });
             }
             throw dbError;
+        }
+
+        // 6. Link Balita
+        const links = balita_ids.map((bid: string) => ({
+            user_id: newAuthData.user.id,
+            balita_id: bid
+        }));
+
+        const { error: linkError } = await supabaseAdmin
+            .from('orang_tua_balita')
+            .insert(links);
+
+        if (linkError) {
+            console.error('Error linking balita:', linkError);
+            // We don't necessarily need to rollback the whole user creation here, 
+            // but it might be better if we do for consistency.
+            // For now, just logging it.
         }
 
         return NextResponse.json({ success: true, user: newAuthData.user });

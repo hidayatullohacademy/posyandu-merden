@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
-import { ArrowLeft, Activity, Plus, X, Calendar, AlertTriangle, HeartPulse } from 'lucide-react';
+import { ArrowLeft, Activity, Plus, X, Calendar, AlertTriangle, HeartPulse, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -51,6 +51,19 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
     const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        nama_lengkap: '',
+        tempat_lahir: '',
+        tanggal_lahir: '',
+        jenis_kelamin: '',
+        nik: '',
+        alamat: ''
+    });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const supabase = createClient();
 
     const now = new Date();
@@ -80,6 +93,51 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
             toast.error('Gagal memuat data lansia');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleEditLansia = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from('lansia')
+                .update({
+                    nama_lengkap: editFormData.nama_lengkap,
+                    tempat_lahir: editFormData.tempat_lahir,
+                    tanggal_lahir: editFormData.tanggal_lahir,
+                    jenis_kelamin: editFormData.jenis_kelamin,
+                    alamat: editFormData.alamat,
+                    nik: editFormData.nik || null,
+                    nik_status: editFormData.nik ? 'ASLI' : 'SEMENTARA'
+                })
+                .eq('id', id);
+
+            if (error) throw error;
+            toast.success('Data berhasil diperbarui');
+            setShowEditForm(false);
+            fetchData();
+        } catch {
+            toast.error('Gagal memperbarui data');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteLansia = async () => {
+        setIsDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('lansia')
+                .update({ is_active: false })
+                .eq('id', id);
+
+            if (error) throw error;
+            toast.success('Data berhasil dihapus');
+            window.location.href = '/kader/lansia';
+        } catch {
+            toast.error('Gagal menghapus data');
+            setIsDeleting(false);
         }
     };
 
@@ -235,6 +293,24 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                     <ArrowLeft className="h-5 w-5 text-slate-500" />
                 </Link>
                 <h1 className="text-lg font-bold text-slate-800">Profil Lansia</h1>
+                <div className="ml-auto flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => {
+                        setEditFormData({
+                            nama_lengkap: lansia.nama_lengkap,
+                            tempat_lahir: lansia.tempat_lahir,
+                            tanggal_lahir: lansia.tanggal_lahir,
+                            jenis_kelamin: lansia.jenis_kelamin,
+                            alamat: lansia.alamat,
+                            nik: lansia.nik_status === 'ASLI' ? lansia.nik : ''
+                        });
+                        setShowEditForm(true);
+                    }}>
+                        <Edit2 className="h-3.5 w-3.5" /> Edit
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => setShowDeleteConfirm(true)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
             </div>
 
             {/* Profile */}
@@ -340,13 +416,11 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 </div>
             )}
 
-            {/* Premium Visit Form Modal (Mobile Fullscreen Sheet) */}
+            {/* Visit Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
                     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => setShowForm(false)} />
                     <div className="relative w-full max-w-lg bg-slate-50 rounded-t-[2rem] sm:rounded-2xl shadow-2xl animate-slide-up h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
-
-                        {/* Sticky Header */}
                         <div className="bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 rounded-t-[2rem] sm:rounded-t-2xl">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-800">Kunjungan Lansia</h2>
@@ -356,12 +430,8 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                 <X className="h-5 w-5 text-slate-500" />
                             </button>
                         </div>
-
-                        {/* Scrollable Form Content */}
                         <div className="overflow-y-auto flex-1 p-6 space-y-6">
                             <form id="kunjunganLansiaForm" onSubmit={handleSubmitKunjungan} className="space-y-6">
-
-                                {/* Waktu */}
                                 <div className="space-y-1.5">
                                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Bulan & Tahun Kunjungan</label>
                                     <input
@@ -372,8 +442,6 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                         required
                                     />
                                 </div>
-
-                                {/* Antropometri */}
                                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
                                     <div className="flex items-center justify-between mb-2">
                                         <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -390,7 +458,6 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                             </span>
                                         )}
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-4">
                                         <Input label="Berat Badan (kg)" type="number" step="0.1" placeholder="0.0" value={formData.berat_badan} onChange={(e) => setFormData(prev => ({ ...prev, berat_badan: e.target.value }))} error={formErrors.berat_badan} />
                                         <Input label="Tinggi Badan (cm)" type="number" step="0.1" placeholder="0.0" value={formData.tinggi_badan} onChange={(e) => setFormData(prev => ({ ...prev, tinggi_badan: e.target.value }))} error={formErrors.tinggi_badan} />
@@ -404,13 +471,10 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                         )}
                                     </div>
                                 </div>
-
-                                {/* Pemeriksaan Medis */}
                                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
                                     <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-2">
                                         <HeartPulse className="h-4 w-4 text-rose-500" /> Pemeriksaan Medis
                                     </h3>
-
                                     <div className="space-y-4">
                                         <div className="relative">
                                             <p className="text-xs font-semibold text-slate-700 mb-1.5">Tekanan Darah (mmHg)</p>
@@ -429,7 +493,6 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                                 </div>
                                             )}
                                         </div>
-
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="relative">
                                                 <Input label="GDS (mg/dL)" type="number" step="0.1" placeholder="-" value={formData.gula_darah} onChange={(e) => setFormData(prev => ({ ...prev, gula_darah: e.target.value }))} />
@@ -456,8 +519,6 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Rujukan Section */}
                                 <div className={cn(
                                     "p-5 rounded-2xl border transition-colors",
                                     currentRisk.rekomendasiRujukan ? "bg-amber-50 border-amber-200" : "bg-white border-slate-100 shadow-sm"
@@ -478,22 +539,71 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                         </div>
                                     </label>
                                 </div>
-
                                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
                                     <Input label="Keluhan" placeholder="Keluhan pasien (opsional)" value={formData.keluhan} onChange={(e) => setFormData(prev => ({ ...prev, keluhan: e.target.value }))} />
                                     <Input label="Catatan Tambahan" placeholder="Catatan kader (opsional)" value={formData.catatan} onChange={(e) => setFormData(prev => ({ ...prev, catatan: e.target.value }))} />
                                 </div>
-
-                                {/* Padding for sticky bottom */}
                                 <div className="h-4"></div>
                             </form>
                         </div>
-
-                        {/* Sticky Bottom Action */}
                         <div className="bg-white p-4 border-t border-slate-100 sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pt-4 pb-8 sm:pb-4">
                             <Button form="kunjunganLansiaForm" type="submit" className="w-full h-12 text-base font-bold bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-500/30 rounded-xl" isLoading={isSaving}>
                                 Simpan Data Pemeriksaan
                             </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Profile Modal */}
+            {showEditForm && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowEditForm(false)} />
+                    <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-lg font-bold text-slate-800">Edit Profil Lansia</h2>
+                            <button onClick={() => setShowEditForm(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                                <X className="h-5 w-5 text-slate-400" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleEditLansia} className="space-y-4">
+                            <Input label="Nama Lengkap" value={editFormData.nama_lengkap} onChange={(e) => setEditFormData(p => ({ ...p, nama_lengkap: e.target.value }))} required />
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-slate-700">Jenis Kelamin</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'L' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'L' ? 'bg-emerald-50 border-emerald-300 text-emerald-700 font-bold' : 'bg-white border-slate-200')}>Laki-laki</button>
+                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'P' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'P' ? 'bg-rose-50 border-rose-300 text-rose-700 font-bold' : 'bg-white border-slate-200')}>Perempuan</button>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Input label="Tempat Lahir" value={editFormData.tempat_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tempat_lahir: e.target.value }))} required />
+                                <Input label="Tanggal Lahir" type="date" value={editFormData.tanggal_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tanggal_lahir: e.target.value }))} required />
+                            </div>
+                            <Input label="NIK (Opsional)" value={editFormData.nik} onChange={(e) => setEditFormData(p => ({ ...p, nik: e.target.value }))} />
+                            <Input label="Alamat" value={editFormData.alamat} onChange={(e) => setEditFormData(p => ({ ...p, alamat: e.target.value }))} required />
+                            <div className="pt-2">
+                                <Button type="submit" className="w-full" isLoading={isSaving}>Simpan Perubahan</Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+                    <div className="relative w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl animate-fade-in">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                                <AlertCircle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900">Hapus Data Lansia?</h3>
+                            <p className="text-xs text-slate-500 mt-2">Data akan dipindahkan ke arsip dan tidak akan muncul di daftar aktif. Tindakan ini tidak dapat dibatalkan.</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-6">
+                            <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>Batal</Button>
+                            <Button variant="danger" onClick={handleDeleteLansia} isLoading={isDeleting}>Ya, Hapus</Button>
                         </div>
                     </div>
                 </div>

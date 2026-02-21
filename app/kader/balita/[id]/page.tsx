@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { createClient } from '@/lib/supabase';
-import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar } from 'lucide-react';
+import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -46,6 +46,18 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        nama: '',
+        nama_ibu: '',
+        tanggal_lahir: '',
+        jenis_kelamin: '',
+        nik: ''
+    });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const supabase = createClient();
 
     const now = new Date();
@@ -89,6 +101,50 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             toast.error('Gagal memuat data balita');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleEditBalita = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from('balita')
+                .update({
+                    nama: editFormData.nama,
+                    nama_ibu: editFormData.nama_ibu,
+                    tanggal_lahir: editFormData.tanggal_lahir,
+                    jenis_kelamin: editFormData.jenis_kelamin,
+                    nik: editFormData.nik || null,
+                    nik_status: editFormData.nik ? 'ASLI' : 'SEMENTARA'
+                })
+                .eq('id', id);
+
+            if (error) throw error;
+            toast.success('Data berhasil diperbarui');
+            setShowEditForm(false);
+            fetchData();
+        } catch {
+            toast.error('Gagal memperbarui data');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteBalita = async () => {
+        setIsDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('balita')
+                .update({ is_active: false })
+                .eq('id', id);
+
+            if (error) throw error;
+            toast.success('Data berhasil dihapus');
+            window.location.href = '/kader/balita';
+        } catch {
+            toast.error('Gagal menghapus data');
+            setIsDeleting(false);
         }
     };
 
@@ -194,6 +250,23 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 </Link>
                 <div>
                     <h1 className="text-lg font-bold text-slate-800">Profil Balita</h1>
+                </div>
+                <div className="ml-auto flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => {
+                        setEditFormData({
+                            nama: balita.nama,
+                            nama_ibu: balita.nama_ibu,
+                            tanggal_lahir: balita.tanggal_lahir,
+                            jenis_kelamin: balita.jenis_kelamin,
+                            nik: balita.nik_status === 'ASLI' ? balita.nik : ''
+                        });
+                        setShowEditForm(true);
+                    }}>
+                        <Edit2 className="h-3.5 w-3.5" /> Edit
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => setShowDeleteConfirm(true)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                 </div>
             </div>
 
@@ -430,6 +503,57 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Profile Modal */}
+            {showEditForm && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowEditForm(false)} />
+                    <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-lg font-bold text-slate-800">Edit Profil Balita</h2>
+                            <button onClick={() => setShowEditForm(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                                <X className="h-5 w-5 text-slate-400" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleEditBalita} className="space-y-4">
+                            <Input label="Nama Balita" value={editFormData.nama} onChange={(e) => setEditFormData(p => ({ ...p, nama: e.target.value }))} required />
+                            <Input label="Nama Ibu" value={editFormData.nama_ibu} onChange={(e) => setEditFormData(p => ({ ...p, nama_ibu: e.target.value }))} required />
+                            <Input label="Tanggal Lahir" type="date" value={editFormData.tanggal_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tanggal_lahir: e.target.value }))} required />
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-slate-700">Jenis Kelamin</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'L' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'L' ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold' : 'bg-white border-slate-200')}>Laki-laki</button>
+                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'P' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'P' ? 'bg-pink-50 border-pink-300 text-pink-700 font-bold' : 'bg-white border-slate-200')}>Perempuan</button>
+                                </div>
+                            </div>
+                            <Input label="NIK (Opsional)" value={editFormData.nik} onChange={(e) => setEditFormData(p => ({ ...p, nik: e.target.value }))} />
+                            <div className="pt-2">
+                                <Button type="submit" className="w-full" isLoading={isSaving}>Simpan Perubahan</Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+                    <div className="relative w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl animate-fade-in">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                                <AlertCircle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900">Hapus Data Balita?</h3>
+                            <p className="text-xs text-slate-500 mt-2">Data akan dipindahkan ke arsip dan tidak akan muncul di daftar aktif. Tindakan ini tidak dapat dibatalkan.</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-6">
+                            <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>Batal</Button>
+                            <Button variant="danger" onClick={handleDeleteBalita} isLoading={isDeleting}>Ya, Hapus</Button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -6,7 +6,7 @@ import { ArrowLeft, Activity, Plus, X, Calendar, AlertTriangle, HeartPulse, Edit
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, formatDate, hitungUsiaTahun, hitungIMT, getStatusIMT, evaluateRisikoLansia, formatNumber, parseNumber } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaTahun, hitungIMT, getStatusIMT, evaluateRisikoLansia, formatNumber, parseNumber, formatUsiaDetail } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -330,7 +330,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="bg-slate-50 rounded-xl p-3">
                         <p className="text-[10px] text-slate-400 mb-0.5">Usia</p>
-                        <p className="font-semibold text-slate-700">{usia} tahun</p>
+                        <p className="font-semibold text-slate-700">{formatUsiaDetail(lansia.tanggal_lahir)}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-3">
                         <p className="text-[10px] text-slate-400 mb-0.5">Jenis Kelamin</p>

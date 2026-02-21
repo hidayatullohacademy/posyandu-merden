@@ -68,6 +68,44 @@ export function hitungUsiaTahun(tanggalLahir: string | Date): number {
 }
 
 /**
+ * Hitung usia detail (tahun, bulan, hari)
+ */
+export function hitungUsiaDetail(tanggalLahir: string | Date) {
+    const lahir = typeof tanggalLahir === 'string' ? new Date(tanggalLahir) : tanggalLahir;
+    const sekarang = new Date();
+
+    let tahun = sekarang.getFullYear() - lahir.getFullYear();
+    let bulan = sekarang.getMonth() - lahir.getMonth();
+    let hari = sekarang.getDate() - lahir.getDate();
+
+    if (hari < 0) {
+        bulan--;
+        // Dapatkan jumlah hari di bulan sebelumnya
+        const bulanLalu = new Date(sekarang.getFullYear(), sekarang.getMonth(), 0).getDate();
+        hari += bulanLalu;
+    }
+
+    if (bulan < 0) {
+        tahun--;
+        bulan += 12;
+    }
+
+    return { tahun, bulan, hari };
+}
+
+/**
+ * Format usia detail menjadi string "X thn Y bln Z hari"
+ */
+export function formatUsiaDetail(tanggalLahir: string | Date): string {
+    const { tahun, bulan, hari } = hitungUsiaDetail(tanggalLahir);
+    const parts = [];
+    if (tahun > 0) parts.push(`${tahun} thn`);
+    if (bulan > 0) parts.push(`${bulan} bln`);
+    if (hari > 0 || parts.length === 0) parts.push(`${hari} hari`);
+    return parts.join(' ');
+}
+
+/**
  * Hitung IMT (Indeks Massa Tubuh)
  * IMT = BB (kg) / (TB (m))²
  */

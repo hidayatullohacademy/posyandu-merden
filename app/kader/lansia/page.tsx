@@ -6,7 +6,7 @@ import { Heart, Plus, Search, ChevronRight, X } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, hitungUsiaTahun } from '@/lib/utils';
+import { cn, hitungUsiaTahun, formatUsiaDetail } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -226,7 +226,7 @@ export default function KaderLansiaPage() {
                                             </span>
                                         </div>
                                         <p className="text-xs text-slate-400 truncate">
-                                            {hitungUsiaTahun(lansia.tanggal_lahir)} tahun · {lansia.alamat}
+                                            {formatUsiaDetail(lansia.tanggal_lahir)} · {lansia.alamat}
                                         </p>
                                     </div>
                                     <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />

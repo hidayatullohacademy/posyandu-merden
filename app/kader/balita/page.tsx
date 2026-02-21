@@ -6,8 +6,7 @@ import { Baby, Plus, Search, ChevronRight, X } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn } from '@/lib/utils';
-import { hitungUsiaBulan } from '@/lib/utils';
+import { cn, hitungUsiaBulan, formatUsiaDetail } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -174,11 +173,7 @@ export default function KaderBalitaPage() {
     };
 
     const getUsiaLabel = (tanggalLahir: string) => {
-        const bulan = hitungUsiaBulan(tanggalLahir);
-        if (bulan < 12) return `${bulan} bulan`;
-        const tahun = Math.floor(bulan / 12);
-        const sisaBulan = bulan % 12;
-        return sisaBulan > 0 ? `${tahun} thn ${sisaBulan} bln` : `${tahun} tahun`;
+        return formatUsiaDetail(tanggalLahir);
     };
 
     return (

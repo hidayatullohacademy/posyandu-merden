@@ -6,7 +6,7 @@ import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCi
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi, formatNumber, parseNumber } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi, formatNumber, parseNumber, formatUsiaDetail } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -290,7 +290,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                     <div className="bg-slate-50 rounded-xl p-3">
                         <p className="text-[10px] text-slate-400 mb-0.5">Usia</p>
                         <p className="font-semibold text-slate-700">
-                            {usia < 12 ? `${usia} bulan` : `${Math.floor(usia / 12)} thn ${usia % 12} bln`}
+                            {formatUsiaDetail(balita.tanggal_lahir)}
                         </p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-3">

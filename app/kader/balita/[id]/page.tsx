@@ -278,15 +278,19 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const handleLinkParent = async (parentId: string) => {
         setIsLinking(parentId === 'loading' ? true : false); // UI feedback
         try {
-            const { error } = await supabase.from('orang_tua_balita').insert({
-                user_id: parentId,
-                balita_id: id
+            const res = await fetch('/api/kader/ortu-balita', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: parentId, balita_id: id })
             });
-            if (error) {
-                if (error.code === '23505') toast.error('Akun sudah ditautkan');
-                else throw error;
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (res.status === 409) toast.error('Akun sudah ditautkan');
+                else throw new Error(data.error || 'Server error');
                 return;
             }
+
             toast.success('Tautan akun berhasil');
             fetchData();
         } catch (error: any) {
@@ -296,12 +300,15 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
 
     const handleUnlinkParent = async (parentId: string) => {
         try {
-            const { error } = await supabase
-                .from('orang_tua_balita')
-                .delete()
-                .eq('user_id', parentId)
-                .eq('balita_id', id);
-            if (error) throw error;
+            const res = await fetch('/api/kader/ortu-balita', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: parentId, balita_id: id })
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Server error');
+
             toast.success('Tautan akun dicopot');
             fetchData();
         } catch (error: any) {

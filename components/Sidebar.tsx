@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase';
 
 interface SidebarProps {
-    role?: 'ADMIN' | 'KADER';
+    role?: 'ADMIN' | 'KADER' | 'ORANG_TUA';
 }
 
 const adminMenuItems = [
@@ -39,15 +39,21 @@ const kaderMenuItems = [
     { label: 'Orang Tua', href: '/kader/ortu', icon: Users },
 ];
 
+const ortuMenuItems = [
+    { label: 'Beranda', href: '/ortu/dashboard', icon: LayoutDashboard },
+    { label: 'Anak Saya', href: '/ortu/anak', icon: Baby },
+    { label: 'Imunisasi', href: '/ortu/imunisasi', icon: Syringe },
+];
+
 export function Sidebar({ role = 'ADMIN' }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const supabase = createClient();
 
-    const menuItems = role === 'ADMIN' ? adminMenuItems : kaderMenuItems;
+    const menuItems = role === 'ADMIN' ? adminMenuItems : role === 'KADER' ? kaderMenuItems : ortuMenuItems;
     const settingsHref = role === 'ADMIN' ? '/admin/pengaturan' : '/kader/pengaturan';
-    const roleLabel = role === 'ADMIN' ? 'Administrator' : 'Kader Posyandu';
+    const roleLabel = role === 'ADMIN' ? 'Administrator' : role === 'KADER' ? 'Kader Posyandu' : 'Orang Tua';
 
     // Close sidebar on route change (mobile)
     useEffect(() => {
@@ -56,7 +62,7 @@ export function Sidebar({ role = 'ADMIN' }: SidebarProps) {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        router.push('/login');
+        router.push('/');
     };
 
     return (
@@ -137,18 +143,20 @@ export function Sidebar({ role = 'ADMIN' }: SidebarProps) {
                     </div>
 
                     <div className="space-y-1">
-                        <Link
-                            href={settingsHref}
-                            className={cn(
-                                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                                pathname.startsWith(settingsHref)
-                                    ? "bg-teal-500/10 text-teal-400"
-                                    : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
-                            )}
-                        >
-                            <Settings className="h-4.5 w-4.5 ml-1" />
-                            Pengaturan
-                        </Link>
+                        {role !== 'ORANG_TUA' && (
+                            <Link
+                                href={settingsHref}
+                                className={cn(
+                                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                                    pathname.startsWith(settingsHref)
+                                        ? "bg-teal-500/10 text-teal-400"
+                                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                                )}
+                            >
+                                <Settings className="h-4.5 w-4.5 ml-1" />
+                                Pengaturan
+                            </Link>
+                        )}
                         <button
                             onClick={handleLogout}
                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-colors group"

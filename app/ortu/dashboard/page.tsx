@@ -90,7 +90,7 @@ export default function OrtuDashboard() {
     const allNormal = children.length > 0 && children.every(c => !c.last_kunjungan || c.last_kunjungan.status_gizi === 'NORMAL');
 
     return (
-        <div className="space-y-6 pb-20 animate-fade-in bg-orange-50/30 min-h-screen -m-4 sm:-m-8 p-4 sm:p-8">
+        <div className="space-y-6 pb-10 animate-fade-in">
             {/* Header Section */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">

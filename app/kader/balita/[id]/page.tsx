@@ -57,6 +57,9 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [editVisitId, setEditVisitId] = useState<string | null>(null);
+    const [showDeleteVisitConfirm, setShowDeleteVisitConfirm] = useState(false);
+    const [visitToDeleteId, setVisitToDeleteId] = useState<string | null>(null);
 
     const supabase = createClient();
 
@@ -172,7 +175,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             const zScore = getZScoreBBU(balita!.jenis_kelamin as 'L' | 'P', usiaM, bb);
             const statusGizi = getStatusGizi(zScore);
 
-            const { error } = await supabase.from('kunjungan_balita').insert({
+            const visitData = {
                 balita_id: id,
                 posyandu_id: balita!.posyandu_id,
                 bulan: parseInt(formData.periode_kunjungan.split('-')[1]),
@@ -186,7 +189,11 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 status_gizi: statusGizi,
                 catatan: formData.catatan || null,
                 dicatat_oleh: user.id,
-            });
+            };
+
+            const { error } = editVisitId
+                ? await supabase.from('kunjungan_balita').update(visitData).eq('id', editVisitId)
+                : await supabase.from('kunjungan_balita').insert(visitData);
 
             if (error) {
                 if (error.code === '23505') {
@@ -197,8 +204,9 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 return;
             }
 
-            toast.success('Kunjungan berhasil dicatat!');
+            toast.success(editVisitId ? 'Kunjungan diperbarui!' : 'Kunjungan berhasil dicatat!');
             setShowForm(false);
+            setEditVisitId(null);
             setFormData({
                 berat_badan: '', tinggi_badan: '', lingkar_kepala: '', lingkar_lengan: '',
                 vitamin_a: false, obat_cacing: false, catatan: '',
@@ -210,6 +218,27 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             toast.error(`Gagal menyimpan: ${error.message || 'Error tidak diketahui'}`);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDeleteVisit = async () => {
+        if (!visitToDeleteId) return;
+        setIsDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('kunjungan_balita')
+                .delete()
+                .eq('id', visitToDeleteId);
+
+            if (error) throw error;
+            toast.success('Riwayat kunjungan dihapus');
+            setShowDeleteVisitConfirm(false);
+            setVisitToDeleteId(null);
+            fetchData();
+        } catch (error: any) {
+            toast.error('Gagal menghapus data: ' + (error.message || ''));
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -375,6 +404,36 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                                         {k.status_gizi}
                                     </span>
                                 )}
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => {
+                                            setEditVisitId(k.id);
+                                            setFormData({
+                                                berat_badan: k.berat_badan.toString().replace('.', ','),
+                                                tinggi_badan: k.tinggi_badan.toString().replace('.', ','),
+                                                lingkar_kepala: k.lingkar_kepala?.toString().replace('.', ',') || '',
+                                                lingkar_lengan: k.lingkar_lengan?.toString().replace('.', ',') || '',
+                                                vitamin_a: k.vitamin_a,
+                                                obat_cacing: k.obat_cacing,
+                                                catatan: k.catatan || '',
+                                                periode_kunjungan: `${k.tahun}-${k.bulan.toString().padStart(2, '0')}-01`
+                                            });
+                                            setShowForm(true);
+                                        }}
+                                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-blue-600 transition-colors"
+                                    >
+                                        <Edit2 className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setVisitToDeleteId(k.id);
+                                            setShowDeleteVisitConfirm(true);
+                                        }}
+                                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
                             </div>
                             <div className="grid grid-cols-4 gap-2 text-xs">
                                 <div>
@@ -408,11 +467,11 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             {/* Visit Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowForm(false)} />
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowForm(false); setEditVisitId(null); }} />
                     <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-lg font-bold text-slate-800">Catat Kunjungan</h2>
-                            <button onClick={() => setShowForm(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                            <h2 className="text-lg font-bold text-slate-800">{editVisitId ? 'Edit Riwayat Kunjungan' : 'Catat Kunjungan'}</h2>
+                            <button onClick={() => { setShowForm(false); setEditVisitId(null); }} className="p-1 hover:bg-slate-100 rounded-lg">
                                 <X className="h-5 w-5 text-slate-400" />
                             </button>
                         </div>
@@ -499,7 +558,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
 
                             <div className="pt-2">
                                 <Button type="submit" className="w-full" isLoading={isSaving}>
-                                    Simpan Kunjungan
+                                    {editVisitId ? 'Simpan Perubahan' : 'Simpan Kunjungan'}
                                 </Button>
                             </div>
                         </form>
@@ -553,6 +612,40 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                         <div className="grid grid-cols-2 gap-3 mt-6">
                             <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>Batal</Button>
                             <Button variant="danger" onClick={handleDeleteBalita} isLoading={isDeleting}>Ya, Hapus</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Delete Visit Confirmation */}
+            {showDeleteVisitConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteVisitConfirm(false)} />
+                    <div className="relative w-full max-w-sm bg-white rounded-2xl p-6 animate-scale-in">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                                <Trash2 className="h-6 w-6 text-red-600" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800 mb-2">Hapus Riwayat?</h3>
+                            <p className="text-sm text-slate-500 mb-6">
+                                Tindakan ini tidak dapat dibatalkan. Riwayat kunjungan bulan ini akan dihapus secara permanen.
+                            </p>
+                            <div className="flex gap-3 w-full">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => setShowDeleteVisitConfirm(false)}
+                                    disabled={isDeleting}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-red-600 hover:bg-red-700"
+                                    onClick={handleDeleteVisit}
+                                    isLoading={isDeleting}
+                                >
+                                    Hapus
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>

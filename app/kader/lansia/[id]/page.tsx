@@ -63,6 +63,9 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
     });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [editVisitId, setEditVisitId] = useState<string | null>(null);
+    const [showDeleteVisitConfirm, setShowDeleteVisitConfirm] = useState(false);
+    const [visitToDeleteId, setVisitToDeleteId] = useState<string | null>(null);
 
     const supabase = createClient();
 
@@ -177,7 +180,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 imt
             });
 
-            const { error } = await supabase.from('kunjungan_lansia').insert({
+            const visitData = {
                 lansia_id: id,
                 posyandu_id: lansia!.posyandu_id,
                 bulan: parseInt(formData.periode_kunjungan.split('-')[1]),
@@ -196,15 +199,20 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 keluhan: formData.keluhan || null,
                 catatan: formData.catatan || null,
                 dicatat_oleh: user.id,
-            });
+            };
+
+            const { error } = editVisitId
+                ? await supabase.from('kunjungan_lansia').update(visitData).eq('id', editVisitId)
+                : await supabase.from('kunjungan_lansia').insert(visitData);
 
             if (error) {
                 if (error.code === '23505') { toast.error('Data bulan ini sudah ada'); return; }
                 throw error;
             }
 
-            toast.success('Kunjungan berhasil dicatat!');
+            toast.success(editVisitId ? 'Kunjungan diperbarui!' : 'Kunjungan berhasil dicatat!');
             setShowForm(false);
+            setEditVisitId(null);
             setFormData({
                 berat_badan: '', tinggi_badan: '', lingkar_perut: '',
                 sistolik: '', diastolik: '', gula_darah: '', kolesterol: '', asam_urat: '',
@@ -217,6 +225,27 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
             toast.error(`Gagal menyimpan: ${error.message || 'Error tidak diketahui'}`);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDeleteVisit = async () => {
+        if (!visitToDeleteId) return;
+        setIsDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('kunjungan_lansia')
+                .delete()
+                .eq('id', visitToDeleteId);
+
+            if (error) throw error;
+            toast.success('Riwayat kunjungan dihapus');
+            setShowDeleteVisitConfirm(false);
+            setVisitToDeleteId(null);
+            fetchData();
+        } catch (error: any) {
+            toast.error('Gagal menghapus data: ' + (error.message || ''));
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -400,8 +429,42 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                 <div className="flex items-center gap-2">
                                     <Calendar className="h-3.5 w-3.5 text-slate-400" />
                                     <span className="text-xs font-semibold text-slate-600">{BULAN_NAMES[k.bulan]} {k.tahun}</span>
+                                    {k.perlu_rujukan && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600">Rujukan</span>}
                                 </div>
-                                {k.perlu_rujukan && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600">Rujukan</span>}
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => {
+                                            setEditVisitId(k.id);
+                                            setFormData({
+                                                berat_badan: k.berat_badan.toString().replace('.', ','),
+                                                tinggi_badan: k.tinggi_badan.toString().replace('.', ','),
+                                                lingkar_perut: k.lingkar_perut?.toString().replace('.', ',') || '',
+                                                sistolik: k.sistolik?.toString() || '',
+                                                diastolik: k.diastolik?.toString() || '',
+                                                gula_darah: k.gula_darah?.toString().replace('.', ',') || '',
+                                                kolesterol: k.kolesterol?.toString().replace('.', ',') || '',
+                                                asam_urat: k.asam_urat?.toString().replace('.', ',') || '',
+                                                perlu_rujukan: k.perlu_rujukan,
+                                                keluhan: k.keluhan || '',
+                                                catatan: k.catatan || '',
+                                                periode_kunjungan: `${k.tahun}-${k.bulan.toString().padStart(2, '0')}`
+                                            });
+                                            setShowForm(true);
+                                        }}
+                                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-blue-600 transition-colors"
+                                    >
+                                        <Edit2 className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setVisitToDeleteId(k.id);
+                                            setShowDeleteVisitConfirm(true);
+                                        }}
+                                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
                             </div>
                             <div className="grid grid-cols-3 gap-2 text-xs">
                                 <div><p className="text-slate-400">BB</p><p className="font-semibold text-slate-700">{formatNumber(k.berat_badan)} kg</p></div>
@@ -420,14 +483,14 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
             {/* Visit Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-                    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => setShowForm(false)} />
+                    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => { setShowForm(false); setEditVisitId(null); }} />
                     <div className="relative w-full max-w-lg bg-slate-50 rounded-t-[2rem] sm:rounded-2xl shadow-2xl animate-slide-up h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
                         <div className="bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 rounded-t-[2rem] sm:rounded-t-2xl">
                             <div>
-                                <h2 className="text-lg font-bold text-slate-800">Kunjungan Lansia</h2>
+                                <h2 className="text-lg font-bold text-slate-800">{editVisitId ? 'Edit Data Pemeriksaan' : 'Kunjungan Lansia'}</h2>
                                 <p className="text-sm font-medium text-teal-600">{lansia.nama_lengkap} ({lansia.jenis_kelamin})</p>
                             </div>
-                            <button onClick={() => setShowForm(false)} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors">
+                            <button onClick={() => { setShowForm(false); setEditVisitId(null); }} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors">
                                 <X className="h-5 w-5 text-slate-500" />
                             </button>
                         </div>
@@ -549,66 +612,105 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                         </div>
                         <div className="bg-white p-4 border-t border-slate-100 sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pt-4 pb-8 sm:pb-4">
                             <Button form="kunjunganLansiaForm" type="submit" className="w-full h-12 text-base font-bold bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-500/30 rounded-xl" isLoading={isSaving}>
-                                Simpan Data Pemeriksaan
+                                {editVisitId ? 'Simpan Perubahan' : 'Simpan Data Pemeriksaan'}
                             </Button>
                         </div>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Edit Profile Modal */}
-            {showEditForm && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowEditForm(false)} />
-                    <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-lg font-bold text-slate-800">Edit Profil Lansia</h2>
-                            <button onClick={() => setShowEditForm(false)} className="p-1 hover:bg-slate-100 rounded-lg">
-                                <X className="h-5 w-5 text-slate-400" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleEditLansia} className="space-y-4">
-                            <Input label="Nama Lengkap" value={editFormData.nama_lengkap} onChange={(e) => setEditFormData(p => ({ ...p, nama_lengkap: e.target.value }))} required />
-                            <div className="space-y-1.5">
-                                <label className="block text-sm font-medium text-slate-700">Jenis Kelamin</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'L' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'L' ? 'bg-emerald-50 border-emerald-300 text-emerald-700 font-bold' : 'bg-white border-slate-200')}>Laki-laki</button>
-                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'P' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'P' ? 'bg-rose-50 border-rose-300 text-rose-700 font-bold' : 'bg-white border-slate-200')}>Perempuan</button>
+            {
+                showEditForm && (
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowEditForm(false)} />
+                        <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-center justify-between mb-5">
+                                <h2 className="text-lg font-bold text-slate-800">Edit Profil Lansia</h2>
+                                <button onClick={() => setShowEditForm(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                                    <X className="h-5 w-5 text-slate-400" />
+                                </button>
+                            </div>
+                            <form onSubmit={handleEditLansia} className="space-y-4">
+                                <Input label="Nama Lengkap" value={editFormData.nama_lengkap} onChange={(e) => setEditFormData(p => ({ ...p, nama_lengkap: e.target.value }))} required />
+                                <div className="space-y-1.5">
+                                    <label className="block text-sm font-medium text-slate-700">Jenis Kelamin</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'L' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'L' ? 'bg-emerald-50 border-emerald-300 text-emerald-700 font-bold' : 'bg-white border-slate-200')}>Laki-laki</button>
+                                        <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'P' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'P' ? 'bg-rose-50 border-rose-300 text-rose-700 font-bold' : 'bg-white border-slate-200')}>Perempuan</button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Input label="Tempat Lahir" value={editFormData.tempat_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tempat_lahir: e.target.value }))} required />
-                                <Input label="Tanggal Lahir" type="date" value={editFormData.tanggal_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tanggal_lahir: e.target.value }))} required />
-                            </div>
-                            <Input label="NIK (Opsional)" value={editFormData.nik} onChange={(e) => setEditFormData(p => ({ ...p, nik: e.target.value }))} />
-                            <Input label="Alamat" value={editFormData.alamat} onChange={(e) => setEditFormData(p => ({ ...p, alamat: e.target.value }))} required />
-                            <div className="pt-2">
-                                <Button type="submit" className="w-full" isLoading={isSaving}>Simpan Perubahan</Button>
-                            </div>
-                        </form>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Input label="Tempat Lahir" value={editFormData.tempat_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tempat_lahir: e.target.value }))} required />
+                                    <Input label="Tanggal Lahir" type="date" value={editFormData.tanggal_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tanggal_lahir: e.target.value }))} required />
+                                </div>
+                                <Input label="NIK (Opsional)" value={editFormData.nik} onChange={(e) => setEditFormData(p => ({ ...p, nik: e.target.value }))} />
+                                <Input label="Alamat" value={editFormData.alamat} onChange={(e) => setEditFormData(p => ({ ...p, alamat: e.target.value }))} required />
+                                <div className="pt-2">
+                                    <Button type="submit" className="w-full" isLoading={isSaving}>Simpan Perubahan</Button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Delete Confirmation */}
-            {showDeleteConfirm && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
-                    <div className="relative w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl animate-fade-in">
-                        <div className="flex flex-col items-center text-center">
-                            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
-                                <AlertCircle className="h-6 w-6 text-red-500" />
+            {
+                showDeleteConfirm && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+                        <div className="relative w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl animate-fade-in">
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                                    <AlertCircle className="h-6 w-6 text-red-500" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-900">Hapus Data Lansia?</h3>
+                                <p className="text-xs text-slate-500 mt-2">Data akan dipindahkan ke arsip dan tidak akan muncul di daftar aktif. Tindakan ini tidak dapat dibatalkan.</p>
                             </div>
-                            <h3 className="text-base font-bold text-slate-900">Hapus Data Lansia?</h3>
-                            <p className="text-xs text-slate-500 mt-2">Data akan dipindahkan ke arsip dan tidak akan muncul di daftar aktif. Tindakan ini tidak dapat dibatalkan.</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 mt-6">
-                            <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>Batal</Button>
-                            <Button variant="danger" onClick={handleDeleteLansia} isLoading={isDeleting}>Ya, Hapus</Button>
+                            <div className="grid grid-cols-2 gap-3 mt-6">
+                                <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>Batal</Button>
+                                <Button variant="danger" onClick={handleDeleteLansia} isLoading={isDeleting}>Ya, Hapus</Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+            {/* Delete Visit Confirmation */}
+            {
+                showDeleteVisitConfirm && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteVisitConfirm(false)} />
+                        <div className="relative w-full max-w-sm bg-white rounded-2xl p-6 animate-scale-in flex flex-col items-center">
+                            <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                                <Trash2 className="h-6 w-6 text-red-600" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800 mb-2 text-center">Hapus Riwayat?</h3>
+                            <p className="text-sm text-slate-500 mb-6 text-center">
+                                Tindakan ini tidak dapat dibatalkan. Riwayat kunjungan ini akan dihapus secara permanen.
+                            </p>
+                            <div className="flex gap-3 w-full">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => setShowDeleteVisitConfirm(false)}
+                                    disabled={isDeleting}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-red-600 hover:bg-red-700 font-bold"
+                                    onClick={handleDeleteVisit}
+                                    isLoading={isDeleting}
+                                >
+                                    Hapus
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }

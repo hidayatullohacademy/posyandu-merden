@@ -13,11 +13,16 @@ import {
     Settings,
     LogOut,
     Shield,
-    Menu,
     X,
+    Baby,
+    Heart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase';
+
+interface SidebarProps {
+    role?: 'ADMIN' | 'KADER';
+}
 
 const adminMenuItems = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
@@ -28,11 +33,24 @@ const adminMenuItems = [
     { label: 'Notifikasi', href: '/admin/notifikasi', icon: Bell },
 ];
 
-export function Sidebar() {
+const kaderMenuItems = [
+    { label: 'Beranda', href: '/kader/dashboard', icon: LayoutDashboard },
+    { label: 'Daftar Balita', href: '/kader/balita', icon: Baby },
+    { label: 'Daftar Lansia', href: '/kader/lansia', icon: Heart },
+    { label: 'Imunisasi', href: '/kader/imunisasi', icon: Syringe },
+    { label: 'Jadwal', href: '/kader/jadwal', icon: CalendarDays },
+    { label: 'Orang Tua', href: '/kader/ortu', icon: Users },
+];
+
+export function Sidebar({ role = 'ADMIN' }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const supabase = createClient();
+
+    const menuItems = role === 'ADMIN' ? adminMenuItems : kaderMenuItems;
+    const settingsHref = role === 'ADMIN' ? '/admin/pengaturan' : '/kader/pengaturan';
+    const roleLabel = role === 'ADMIN' ? 'Administrator' : 'Kader Posyandu';
 
     // Close sidebar on route change (mobile)
     useEffect(() => {
@@ -86,8 +104,8 @@ export function Sidebar() {
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-4 mt-2">
                         Menu Utama
                     </p>
-                    {adminMenuItems.map((item) => {
-                        const isActive = pathname.startsWith(item.href);
+                    {menuItems.map((item) => {
+                        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                         return (
                             <Link
                                 key={item.href}
@@ -116,15 +134,20 @@ export function Sidebar() {
                             <Shield className="h-4 w-4 text-slate-300" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-200 truncate">Administrator</p>
+                            <p className="text-sm font-bold text-slate-200 truncate">{roleLabel}</p>
                             <p className="text-[10px] text-teal-500 font-medium">Online</p>
                         </div>
                     </div>
 
                     <div className="space-y-1">
                         <Link
-                            href="/admin/pengaturan"
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition-colors"
+                            href={settingsHref}
+                            className={cn(
+                                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                                pathname.startsWith(settingsHref)
+                                    ? "bg-teal-500/10 text-teal-400"
+                                    : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                            )}
                         >
                             <Settings className="h-4.5 w-4.5 ml-1" />
                             Pengaturan
@@ -139,6 +162,27 @@ export function Sidebar() {
                     </div>
                 </div>
             </aside>
+
+            {/* Mobile Header */}
+            <div className="md:hidden fixed top-0 left-0 right-0 z-20 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="p-1.5 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-lg">
+                        <Shield className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="font-bold text-white text-xs tracking-wide">POSYANDU ILP</h1>
+                        <p className="text-[8px] text-teal-400 font-medium uppercase tracking-widest">Desa Merden</p>
+                    </div>
+                </div>
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="p-1.5 text-slate-400 hover:bg-slate-800 rounded-lg hover:text-white transition-colors"
+                >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
         </>
     );
 }

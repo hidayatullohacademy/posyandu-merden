@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase';
 import { ArrowLeft, TrendingUp, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { cn, formatDate, hitungUsiaBulan } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaBulan, formatNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -134,11 +134,11 @@ export default function OrtuAnakDetailPage({ params }: { params: Promise<{ id: s
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <p className="text-[10px] text-blue-500">Berat</p>
-                            <p className="text-lg font-bold text-blue-800">{lastK.berat_badan} <span className="text-xs font-normal">kg</span></p>
+                            <p className="text-lg font-bold text-blue-800">{formatNumber(lastK.berat_badan)} <span className="text-xs font-normal">kg</span></p>
                         </div>
                         <div>
                             <p className="text-[10px] text-blue-500">Tinggi</p>
-                            <p className="text-lg font-bold text-blue-800">{lastK.tinggi_badan} <span className="text-xs font-normal">cm</span></p>
+                            <p className="text-lg font-bold text-blue-800">{formatNumber(lastK.tinggi_badan)} <span className="text-xs font-normal">cm</span></p>
                         </div>
                     </div>
                     {lastK.status_gizi && (
@@ -189,19 +189,19 @@ export default function OrtuAnakDetailPage({ params }: { params: Promise<{ id: s
                             <div className="grid grid-cols-4 gap-2 text-xs">
                                 <div>
                                     <p className="text-slate-400">BB</p>
-                                    <p className="font-semibold text-slate-700">{k.berat_badan} kg</p>
+                                    <p className="font-semibold text-slate-700">{formatNumber(k.berat_badan)} kg</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-400">TB</p>
-                                    <p className="font-semibold text-slate-700">{k.tinggi_badan} cm</p>
+                                    <p className="font-semibold text-slate-700">{formatNumber(k.tinggi_badan)} cm</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-400">LK</p>
-                                    <p className="font-semibold text-slate-700">{k.lingkar_kepala ?? '—'}</p>
+                                    <p className="font-semibold text-slate-700">{formatNumber(k.lingkar_kepala)}</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-400">LiLA</p>
-                                    <p className="font-semibold text-slate-700">{k.lingkar_lengan ?? '—'}</p>
+                                    <p className="font-semibold text-slate-700">{formatNumber(k.lingkar_lengan)}</p>
                                 </div>
                             </div>
                             {(k.vitamin_a || k.obat_cacing) && (

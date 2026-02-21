@@ -6,7 +6,7 @@ import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi, formatNumber, parseNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -95,8 +95,8 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const handleSubmitKunjungan = async (e: React.FormEvent) => {
         e.preventDefault();
         const errors: Record<string, string> = {};
-        if (!formData.berat_badan || parseFloat(formData.berat_badan) <= 0) errors.berat_badan = 'Berat badan wajib diisi';
-        if (!formData.tinggi_badan || parseFloat(formData.tinggi_badan) <= 0) errors.tinggi_badan = 'Tinggi badan wajib diisi';
+        if (!formData.berat_badan || parseNumber(formData.berat_badan) <= 0) errors.berat_badan = 'Berat badan wajib diisi';
+        if (!formData.tinggi_badan || parseNumber(formData.tinggi_badan) <= 0) errors.tinggi_badan = 'Tinggi badan wajib diisi';
         setFormErrors(errors);
         if (Object.keys(errors).length > 0) return;
 
@@ -108,8 +108,8 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 return;
             }
 
-            const bb = parseFloat(formData.berat_badan);
-            const tb = parseFloat(formData.tinggi_badan);
+            const bb = parseNumber(formData.berat_badan);
+            const tb = parseNumber(formData.tinggi_badan);
 
             // Calculate Status Gizi
             const usiaM = hitungUsiaBulan(balita!.tanggal_lahir);
@@ -124,8 +124,8 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 tahun: parseInt(formData.periode_kunjungan.split('-')[0]),
                 berat_badan: bb,
                 tinggi_badan: tb,
-                lingkar_kepala: formData.lingkar_kepala ? parseFloat(formData.lingkar_kepala) : null,
-                lingkar_lengan: formData.lingkar_lengan ? parseFloat(formData.lingkar_lengan) : null,
+                lingkar_kepala: formData.lingkar_kepala ? parseNumber(formData.lingkar_kepala) : null,
+                lingkar_lengan: formData.lingkar_lengan ? parseNumber(formData.lingkar_lengan) : null,
                 vitamin_a: formData.vitamin_a,
                 obat_cacing: formData.obat_cacing,
                 status_gizi: statusGizi,
@@ -256,11 +256,11 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <p className="text-[10px] text-teal-500">Berat</p>
-                            <p className="text-lg font-bold text-teal-800">{lastKunjungan.berat_badan} <span className="text-xs font-normal">kg</span></p>
+                            <p className="text-lg font-bold text-teal-800">{formatNumber(lastKunjungan.berat_badan)} <span className="text-xs font-normal">kg</span></p>
                         </div>
                         <div>
                             <p className="text-[10px] text-teal-500">Tinggi</p>
-                            <p className="text-lg font-bold text-teal-800">{lastKunjungan.tinggi_badan} <span className="text-xs font-normal">cm</span></p>
+                            <p className="text-lg font-bold text-teal-800">{formatNumber(lastKunjungan.tinggi_badan)} <span className="text-xs font-normal">cm</span></p>
                         </div>
                     </div>
                 </Card>
@@ -306,19 +306,19 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                             <div className="grid grid-cols-4 gap-2 text-xs">
                                 <div>
                                     <p className="text-slate-400">BB</p>
-                                    <p className="font-semibold text-slate-700">{k.berat_badan} kg</p>
+                                    <p className="font-semibold text-slate-700">{formatNumber(k.berat_badan)} kg</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-400">TB</p>
-                                    <p className="font-semibold text-slate-700">{k.tinggi_badan} cm</p>
+                                    <p className="font-semibold text-slate-700">{formatNumber(k.tinggi_badan)} cm</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-400">LK</p>
-                                    <p className="font-semibold text-slate-700">{k.lingkar_kepala ?? '—'}</p>
+                                    <p className="font-semibold text-slate-700">{formatNumber(k.lingkar_kepala)}</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-400">LiLA</p>
-                                    <p className="font-semibold text-slate-700">{k.lingkar_lengan ?? '—'}</p>
+                                    <p className="font-semibold text-slate-700">{formatNumber(k.lingkar_lengan)}</p>
                                 </div>
                             </div>
                             {(k.vitamin_a || k.obat_cacing) && (

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Baby, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { cn, hitungUsiaBulan } from '@/lib/utils';
+import { cn, hitungUsiaBulan, formatNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -152,7 +152,7 @@ export default function OrtuAnakPage() {
                                         <div className="text-xs">
                                             <span className="text-slate-400">Pengukuran terakhir:</span>
                                             <span className="font-semibold text-slate-700 ml-1">
-                                                {anak.last_kunjungan.berat_badan} kg / {anak.last_kunjungan.tinggi_badan} cm
+                                                {formatNumber(anak.last_kunjungan.berat_badan)} kg / {formatNumber(anak.last_kunjungan.tinggi_badan)} cm
                                             </span>
                                         </div>
                                     </div>

@@ -14,170 +14,193 @@ import Link from 'next/link';
 
 export default function KaderDashboard() {
     return (
-        <div className="space-y-6 pb-20 animate-fade-in bg-slate-50 min-h-screen -m-4 sm:-m-8 p-4 sm:p-8">
-            {/* Header Section */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+        <div className="space-y-6 pb-20 animate-fade-in">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Kader</h1>
+                    <p className="text-slate-500 font-medium">Monitoring kesehatan masyarakat Desa Merden</p>
+                </div>
+                <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="h-10 w-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center border border-teal-100">
                         <UserCircle className="h-6 w-6" />
                     </div>
-                    <div>
-                        <p className="text-xs text-slate-500 font-medium">Selamat datang kembali,</p>
-                        <h1 className="text-lg font-bold text-slate-800">Kader Posyandu</h1>
-                    </div>
-                </div>
-                <div className="relative">
-                    <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
-                        <Bell className="h-5 w-5 text-slate-600" />
-                        <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+                    <div className="pr-4">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none mb-1">Status Anda</p>
+                        <h2 className="text-sm font-bold text-slate-800 leading-none">Kader Aktif</h2>
                     </div>
                 </div>
             </div>
 
-            {/* Horizontal Stats Scroll */}
-            <div className="flex overflow-x-auto hide-scrollbar gap-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-                <div className="min-w-[240px] flex-shrink-0 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-2xl p-5 text-white shadow-md shadow-teal-500/20">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
-                            <CalendarDays className="h-5 w-5 text-white" />
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                        <CalendarDays className="h-24 w-24" />
+                    </div>
+                    <div className="relative z-10">
+                        <div className="bg-white/10 w-12 h-12 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md border border-white/20">
+                            <CalendarDays className="h-6 w-6 text-teal-400" />
+                        </div>
+                        <p className="text-slate-400 font-medium text-sm">Jadwal Terdekat</p>
+                        <h3 className="text-xl font-bold mt-1 group-hover:text-teal-400 transition-colors">Posyandu Lestari 1</h3>
+                        <div className="mt-4 flex items-center gap-2 text-xs font-medium text-teal-400 bg-teal-400/10 w-fit px-3 py-1.5 rounded-full border border-teal-400/20">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                            </span>
+                            Besok, 08:00 WIB
                         </div>
                     </div>
-                    <p className="text-sm font-medium text-teal-50">Jadwal Hari Ini</p>
-                    <h3 className="text-lg font-bold mt-1">Posyandu Lestari 1</h3>
                 </div>
 
-                <div className="min-w-[160px] flex-shrink-0 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="bg-blue-50 p-2 rounded-xl">
-                            <Baby className="h-5 w-5 text-blue-500" />
+                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="bg-blue-50 p-3 rounded-2xl group-hover:bg-blue-100 transition-colors">
+                            <Baby className="h-6 w-6 text-blue-500" />
                         </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2.5 py-1 rounded-full">Data Balita</span>
                     </div>
-                    <p className="text-xs font-medium text-slate-500">Total Balita</p>
-                    <h3 className="text-2xl font-bold text-slate-800 mt-1">85</h3>
+                    <p className="text-sm font-medium text-slate-500">Total Balita Terdaftar</p>
+                    <div className="flex items-end gap-3 mt-1">
+                        <h3 className="text-3xl font-black text-slate-900">85</h3>
+                        <p className="text-xs font-bold text-emerald-500 mb-1.5 flex items-center">+3 bulan ini</p>
+                    </div>
                 </div>
 
-                <div className="min-w-[160px] flex-shrink-0 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="bg-rose-50 p-2 rounded-xl">
-                            <Users className="h-5 w-5 text-rose-500" />
+                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="bg-rose-50 p-3 rounded-2xl group-hover:bg-rose-100 transition-colors">
+                            <Users className="h-6 w-6 text-rose-500" />
                         </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2.5 py-1 rounded-full">Data Lansia</span>
                     </div>
-                    <p className="text-xs font-medium text-slate-500">Total Lansia</p>
-                    <h3 className="text-2xl font-bold text-slate-800 mt-1">42</h3>
+                    <p className="text-sm font-medium text-slate-500">Total Lansia Terdaftar</p>
+                    <div className="flex items-end gap-3 mt-1">
+                        <h3 className="text-3xl font-black text-slate-900">42</h3>
+                        <p className="text-xs font-bold text-emerald-500 mb-1.5 flex items-center">+1 bulan ini</p>
+                    </div>
                 </div>
             </div>
 
             {/* Main Action Grid */}
-            <div>
-                <h2 className="text-sm font-bold text-slate-800 mb-4 px-1">Menu Utama</h2>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="pt-2">
+                <div className="flex items-center justify-between mb-4 px-1">
+                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Menu Layanan</h2>
+                    <button className="text-[10px] font-bold text-teal-600 hover:text-teal-700 uppercase tracking-wider transition-colors">Lihat Semua</button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <Link href="/kader/balita" className="group">
-                        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all group-hover:border-teal-100 group-hover:bg-teal-50/30">
-                            <div className="h-12 w-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Baby className="h-6 w-6 text-blue-600" />
+                        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div className="h-14 w-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-blue-100/50">
+                                <Baby className="h-7 w-7 text-blue-600" />
                             </div>
-                            <h3 className="text-sm font-bold text-slate-800">Daftar Balita</h3>
-                            <p className="text-xs text-slate-500 mt-1">Registrasi & Biodata</p>
+                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Database Balita</h3>
+                            <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Kelola pendaftaran & biodata balita desa</p>
                         </div>
                     </Link>
 
                     <Link href="/kader/lansia" className="group">
-                        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all group-hover:border-teal-100 group-hover:bg-teal-50/30">
-                            <div className="h-12 w-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Users className="h-6 w-6 text-rose-600" />
+                        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div className="h-14 w-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-rose-100/50">
+                                <Users className="h-7 w-7 text-rose-600" />
                             </div>
-                            <h3 className="text-sm font-bold text-slate-800">Daftar Lansia</h3>
-                            <p className="text-xs text-slate-500 mt-1">Registrasi & Biodata</p>
+                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Database Lansia</h3>
+                            <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Kelola pendaftaran & biodata lansia desa</p>
                         </div>
                     </Link>
 
                     <Link href="/kader/balita" className="group">
-                        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all group-hover:border-teal-100 group-hover:bg-teal-50/30">
-                            <div className="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Activity className="h-6 w-6 text-emerald-600" />
+                        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-emerald-100/50">
+                                <Activity className="h-7 w-7 text-emerald-600" />
                             </div>
-                            <h3 className="text-sm font-bold text-slate-800">Kunjungan Balita</h3>
-                            <p className="text-xs text-slate-500 mt-1">Timbang & Ukur</p>
-                        </div>
-                    </Link>
-
-                    <Link href="/kader/lansia" className="group">
-                        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all group-hover:border-teal-100 group-hover:bg-teal-50/30">
-                            <div className="h-12 w-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <HeartPulse className="h-6 w-6 text-purple-600" />
-                            </div>
-                            <h3 className="text-sm font-bold text-slate-800">Kunjungan Lansia</h3>
-                            <p className="text-xs text-slate-500 mt-1">Cek Kesehatan</p>
+                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Pemeriksaan</h3>
+                            <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Input timbang, ukur & kesehatan berkala</p>
                         </div>
                     </Link>
 
                     <Link href="/kader/imunisasi" className="group">
-                        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all group-hover:border-teal-100 group-hover:bg-teal-50/30">
-                            <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Syringe className="h-6 w-6 text-amber-600" />
+                        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div className="h-14 w-14 bg-amber-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-amber-100/50">
+                                <Syringe className="h-7 w-7 text-amber-600" />
                             </div>
-                            <h3 className="text-sm font-bold text-slate-800">Imunisasi</h3>
-                            <p className="text-xs text-slate-500 mt-1">Jadwal & Riwayat</p>
+                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Vaksinasi</h3>
+                            <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Monitor jadwal & riwayat imunisasi balita</p>
                         </div>
                     </Link>
 
                     <Link href="/kader/jadwal" className="group">
-                        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all group-hover:border-teal-100 group-hover:bg-teal-50/30">
-                            <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <CalendarDays className="h-6 w-6 text-indigo-600" />
+                        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div className="h-14 w-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-indigo-100/50">
+                                <CalendarDays className="h-7 w-7 text-indigo-600" />
                             </div>
-                            <h3 className="text-sm font-bold text-slate-800">Jadwal Posyandu</h3>
-                            <p className="text-xs text-slate-500 mt-1">Cek & Usulkan</p>
+                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Agenda Desa</h3>
+                            <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Lihat & kelola jadwal posyandu mendatang</p>
+                        </div>
+                    </Link>
+
+                    <Link href="/kader/ortu" className="group">
+                        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div className="h-14 w-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-slate-200/50">
+                                <Users className="h-7 w-7 text-slate-600" />
+                            </div>
+                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Data Orang Tua</h3>
+                            <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Kelola informasi kontak orang tua/wali</p>
                         </div>
                     </Link>
                 </div>
             </div>
 
-            {/* Recent Activity */}
-            <div>
-                <h2 className="text-sm font-bold text-slate-800 mb-4 px-1">Aktivitas Terbaru</h2>
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div className="p-4 flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-amber-50 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <Syringe className="h-5 w-5 text-amber-500" />
+            {/* Recent Activity & Alerts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
+                <div>
+                    <h2 className="text-sm font-bold text-slate-900 mb-4 px-1 uppercase tracking-widest">Aktivitas Terbaru</h2>
+                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden p-2">
+                        <div className="flex flex-col">
+                            <div className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-3xl transition-colors cursor-pointer group">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-amber-100 transition-colors">
+                                        <Syringe className="h-6 w-6 text-amber-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">Peringatan Imunisasi</p>
+                                        <p className="text-xs font-medium text-slate-500 mt-0.5">2 balita melewati jadwal rutin bulan ini</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-800">Imunisasi Terlambat</p>
-                                    <p className="text-xs text-slate-500">2 Anak perlu segera diimunisasi</p>
-                                </div>
-                            </div>
-                            <ChevronRight className="h-4 w-4 text-slate-400" />
-                        </div>
-                        <div className="h-px bg-slate-50 w-full"></div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-teal-50 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <CalendarDays className="h-5 w-5 text-teal-500" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-800">Jadwal Paling Dekat</p>
-                                    <p className="text-xs text-slate-500">12 Nov 2025 - Posyandu Lestari 1</p>
+                                <div className="h-8 w-8 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all">
+                                    <ChevronRight className="h-4 w-4 text-slate-400" />
                                 </div>
                             </div>
-                            <ChevronRight className="h-4 w-4 text-slate-400" />
+                            <div className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-3xl transition-colors cursor-pointer group">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 bg-teal-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-teal-100 transition-colors">
+                                        <Activity className="h-6 w-6 text-teal-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">Pemeriksaan Selesai</p>
+                                        <p className="text-xs font-medium text-slate-500 mt-0.5">Ananda "Budi Santoso" • Hari ini, 09:15</p>
+                                    </div>
+                                </div>
+                                <div className="h-8 w-8 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all">
+                                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Styles for scrollbar */}
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                .hide-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-                .hide-scrollbar {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-            `}} />
-        </div >
+                <div className="bg-teal-600 rounded-[2rem] p-8 text-white relative overflow-hidden flex flex-col justify-center shadow-lg shadow-teal-100">
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <Bell className="h-32 w-32" />
+                    </div>
+                    <div className="relative z-10">
+                        <h3 className="text-xl font-bold mb-2">Butuh Bantuan?</h3>
+                        <p className="text-teal-50 font-medium text-sm leading-relaxed mb-6">Jika Anda mengalami kendala saat menginput data atau penggunaan aplikasi, hubungi admin desa.</p>
+                        <button className="bg-white text-teal-600 px-6 py-2.5 rounded-2xl text-xs font-bold hover:bg-teal-50 transition-colors shadow-sm uppercase tracking-wider">Hubungi Admin</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }

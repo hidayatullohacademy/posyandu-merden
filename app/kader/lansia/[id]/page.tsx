@@ -6,7 +6,7 @@ import { ArrowLeft, Activity, Plus, X, Calendar, AlertTriangle, HeartPulse } fro
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, formatDate, hitungUsiaTahun, hitungIMT, getStatusIMT, evaluateRisikoLansia } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaTahun, hitungIMT, getStatusIMT, evaluateRisikoLansia, formatNumber, parseNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -86,8 +86,8 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
     const handleSubmitKunjungan = async (e: React.FormEvent) => {
         e.preventDefault();
         const errors: Record<string, string> = {};
-        if (!formData.berat_badan || parseFloat(formData.berat_badan) <= 0) errors.berat_badan = 'Wajib diisi';
-        if (!formData.tinggi_badan || parseFloat(formData.tinggi_badan) <= 0) errors.tinggi_badan = 'Wajib diisi';
+        if (!formData.berat_badan || parseNumber(formData.berat_badan) <= 0) errors.berat_badan = 'Wajib diisi';
+        if (!formData.tinggi_badan || parseNumber(formData.tinggi_badan) <= 0) errors.tinggi_badan = 'Wajib diisi';
         setFormErrors(errors);
         if (Object.keys(errors).length > 0) return;
 
@@ -96,16 +96,16 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { toast.error('Sesi habis'); return; }
 
-            const bb = parseFloat(formData.berat_badan);
-            const tb = parseFloat(formData.tinggi_badan);
+            const bb = parseNumber(formData.berat_badan);
+            const tb = parseNumber(formData.tinggi_badan);
             const imt = hitungIMT(bb, tb);
 
             const sistolik = formData.sistolik ? parseInt(formData.sistolik) : null;
             const diastolik = formData.diastolik ? parseInt(formData.diastolik) : null;
-            const gulaDarah = formData.gula_darah ? parseFloat(formData.gula_darah) : null;
-            const kolesterol = formData.kolesterol ? parseFloat(formData.kolesterol) : null;
-            const asamUrat = formData.asam_urat ? parseFloat(formData.asam_urat) : null;
-            const lingkarPerut = formData.lingkar_perut ? parseFloat(formData.lingkar_perut) : null;
+            const gulaDarah = formData.gula_darah ? parseNumber(formData.gula_darah) : null;
+            const kolesterol = formData.kolesterol ? parseNumber(formData.kolesterol) : null;
+            const asamUrat = formData.asam_urat ? parseNumber(formData.asam_urat) : null;
+            const lingkarPerut = formData.lingkar_perut ? parseNumber(formData.lingkar_perut) : null;
 
             // Auto-calculate risk flags and referral recommendations
             const { flags, rekomendasiRujukan } = evaluateRisikoLansia({
@@ -161,18 +161,18 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
         }
     };
 
-    const bbVal = parseFloat(formData.berat_badan);
-    const tbVal = parseFloat(formData.tinggi_badan);
+    const bbVal = parseNumber(formData.berat_badan);
+    const tbVal = parseNumber(formData.tinggi_badan);
     const currentIMT = useMemo(() => (bbVal && tbVal ? hitungIMT(bbVal, tbVal) : null), [bbVal, tbVal]);
 
     const currentRisk = useMemo(() => {
         if (!lansia) return { flags: {}, rekomendasiRujukan: false };
         const currentSistolik = formData.sistolik ? parseInt(formData.sistolik) : null;
         const currentDiastolik = formData.diastolik ? parseInt(formData.diastolik) : null;
-        const currentGDS = formData.gula_darah ? parseFloat(formData.gula_darah) : null;
-        const currentKolesterol = formData.kolesterol ? parseFloat(formData.kolesterol) : null;
-        const currentAsamUrat = formData.asam_urat ? parseFloat(formData.asam_urat) : null;
-        const currentLingkarPerut = formData.lingkar_perut ? parseFloat(formData.lingkar_perut) : null;
+        const currentGDS = formData.gula_darah ? parseNumber(formData.gula_darah) : null;
+        const currentKolesterol = formData.kolesterol ? parseNumber(formData.kolesterol) : null;
+        const currentAsamUrat = formData.asam_urat ? parseNumber(formData.asam_urat) : null;
+        const currentLingkarPerut = formData.lingkar_perut ? parseNumber(formData.lingkar_perut) : null;
 
         return evaluateRisikoLansia({
             jk: lansia.jenis_kelamin as 'L' | 'P',
@@ -289,11 +289,11 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                         </div>
                         <div>
                             <p className="text-rose-400">GDS</p>
-                            <p className="font-bold text-slate-700">{lastK.gula_darah ?? '—'}</p>
+                            <p className="font-bold text-slate-700">{formatNumber(lastK.gula_darah)}</p>
                         </div>
                         <div>
                             <p className="text-rose-400">IMT</p>
-                            <p className="font-bold text-slate-700">{lastK.imt ? `${lastK.imt} (${getStatusIMT(lastK.imt)})` : '—'}</p>
+                            <p className="font-bold text-slate-700">{lastK.imt ? `${formatNumber(lastK.imt)} (${getStatusIMT(lastK.imt)})` : '—'}</p>
                         </div>
                     </div>
                     {lastK.perlu_rujukan && (
@@ -327,12 +327,12 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                 {k.perlu_rujukan && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600">Rujukan</span>}
                             </div>
                             <div className="grid grid-cols-3 gap-2 text-xs">
-                                <div><p className="text-slate-400">BB</p><p className="font-semibold text-slate-700">{k.berat_badan} kg</p></div>
-                                <div><p className="text-slate-400">TB</p><p className="font-semibold text-slate-700">{k.tinggi_badan} cm</p></div>
+                                <div><p className="text-slate-400">BB</p><p className="font-semibold text-slate-700">{formatNumber(k.berat_badan)} kg</p></div>
+                                <div><p className="text-slate-400">TB</p><p className="font-semibold text-slate-700">{formatNumber(k.tinggi_badan)} cm</p></div>
                                 <div><p className="text-slate-400">Tensi</p><p className={cn('font-semibold', getTensiColor(k.sistolik))}>{k.sistolik && k.diastolik ? `${k.sistolik}/${k.diastolik}` : '—'}</p></div>
-                                <div><p className="text-slate-400">GDS</p><p className="font-semibold text-slate-700">{k.gula_darah ?? '—'}</p></div>
-                                <div><p className="text-slate-400">Kolesterol</p><p className="font-semibold text-slate-700">{k.kolesterol ?? '—'}</p></div>
-                                <div><p className="text-slate-400">Asam Urat</p><p className="font-semibold text-slate-700">{k.asam_urat ?? '—'}</p></div>
+                                <div><p className="text-slate-400">GDS</p><p className="font-semibold text-slate-700">{formatNumber(k.gula_darah)}</p></div>
+                                <div><p className="text-slate-400">Kolesterol</p><p className="font-semibold text-slate-700">{formatNumber(k.kolesterol)}</p></div>
+                                <div><p className="text-slate-400">Asam Urat</p><p className="font-semibold text-slate-700">{formatNumber(k.asam_urat)}</p></div>
                             </div>
                             {k.keluhan && <p className="text-xs text-slate-500 mt-2 italic">Keluhan: {k.keluhan}</p>}
                         </Card>
@@ -386,7 +386,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                                     currentRisk.flags.imt?.includes('Gemuk') ? "bg-amber-100 text-amber-700" :
                                                         "bg-teal-100 text-teal-700"
                                             )}>
-                                                IMT: {currentIMT} {currentRisk.flags.imt || '(✅ Normal)'}
+                                                IMT: {formatNumber(currentIMT)} {currentRisk.flags.imt || '(✅ Normal)'}
                                             </span>
                                         )}
                                     </div>

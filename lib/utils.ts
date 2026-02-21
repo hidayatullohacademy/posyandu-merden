@@ -207,3 +207,25 @@ export function evaluateRisikoLansia(vars: LansiaHealthVars) {
 
     return { flags, rekomendasiRujukan };
 }
+/**
+ * Format angka desimal ke format Indonesia (koma)
+ * @example formatNumber(36.2) → "36,2"
+ */
+export function formatNumber(value: number | string | null | undefined, decimals: number = 2): string {
+    if (value === null || value === undefined || value === '') return '-';
+    const num = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : value;
+    if (isNaN(num)) return '-';
+
+    return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals,
+    }).format(num);
+}
+
+/**
+ * Parse string dengan format Indonesia (koma) ke number
+ * @example parseNumber("36,2") → 36.2
+ */
+export function parseNumber(value: string): number {
+    return parseFloat(value.replace(',', '.'));
+}

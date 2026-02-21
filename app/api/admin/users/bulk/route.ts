@@ -41,7 +41,7 @@ export async function POST(request: Request) {
                     if (authError.message.includes('already registered')) {
                          results.errors.push(`Email/No HP ${user.no_hp} sudah terdaftar.`);
                     } else {
-                         results.errors.push(`Gagal membuat Auth untuk ${user.nama}: ${authError.message}`);
+                         results.errors.push(`Gagal membuat Auth untuk ${user.nama_lengkap}: ${authError.message}`);
                     }
                     results.failed++;
                     continue; 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
                     .from('users')
                     .insert({
                         id: authData.user.id,
-                        nama: user.nama.trim(),
+                        nama_lengkap: user.nama_lengkap.trim(),
                         no_hp: user.no_hp.trim(),
                         nik: user.nik?.trim() || null,
                         role: user.role,
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
                 if (dbError) {
                     // Rollback Auth user if DB insert fails
                      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-                     results.errors.push(`Gagal menyimpan data ${user.nama}: ${dbError.message}`);
+                     results.errors.push(`Gagal menyimpan data ${user.nama_lengkap}: ${dbError.message}`);
                      results.failed++;
                 } else {
                      results.success++;
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
              } catch (err: unknown) {
                  const e = err as Error;
-                 results.errors.push(`Error memproses ${user.nama}: ${e.message}`);
+                 results.errors.push(`Error memproses ${user.nama_lengkap}: ${e.message}`);
                  results.failed++;
              }
         }

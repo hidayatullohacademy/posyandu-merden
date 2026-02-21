@@ -28,7 +28,7 @@ export async function POST(request: Request) {
             email,
             password,
             email_confirm: true,
-            user_metadata: { full_name: userData.nama }
+            user_metadata: { full_name: userData.nama_lengkap }
         });
 
         if (authError) throw authError;

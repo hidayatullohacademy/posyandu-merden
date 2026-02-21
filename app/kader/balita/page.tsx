@@ -139,7 +139,7 @@ export default function KaderBalitaPage() {
                     .ilike('nik', `TEMP-MERDEN-${currentYear}-%`)
                     .order('nik', { ascending: false })
                     .limit(1)
-                    .single();
+                    .maybeSingle();
 
                 let nextUrut = 1;
                 if (lastTemp?.nik) {

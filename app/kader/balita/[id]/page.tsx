@@ -100,7 +100,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [balitaRes, kunjunganRes] = await Promise.all([
+            const [balitaRes, kunjunganRes, linkedRes] = await Promise.all([
                 supabase.from('balita').select('*').eq('id', id).single(),
                 supabase
                     .from('kunjungan_balita')

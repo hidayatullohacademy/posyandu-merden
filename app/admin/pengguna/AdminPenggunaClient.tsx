@@ -15,7 +15,7 @@ type UserRole = 'ADMIN' | 'KADER' | 'ORANG_TUA';
 
 interface UserItem {
     id: string;
-    nama: string;
+    nama_lengkap: string;
     no_hp: string;
     nik: string;
     role: UserRole;
@@ -70,7 +70,7 @@ export default function AdminPenggunaClient() {
     const supabase = createClient();
 
     const [formData, setFormData] = useState({
-        nama: '',
+        nama_lengkap: '',
         no_hp: '',
         nik: '',
         role: '' as UserRole | '',
@@ -91,7 +91,7 @@ export default function AdminPenggunaClient() {
             const q = searchQuery.toLowerCase();
             result = result.filter(
                 (u) =>
-                    u.nama.toLowerCase().includes(q) ||
+                    u.nama_lengkap.toLowerCase().includes(q) ||
                     u.no_hp.toLowerCase().includes(q) ||
                     u.nik.toLowerCase().includes(q)
             );
@@ -103,7 +103,7 @@ export default function AdminPenggunaClient() {
         setIsLoading(true);
         try {
             const [usersRes, posyanduRes] = await Promise.all([
-                supabase.from('users').select('*, posyandu:posyandu_id(nama)').order('nama'),
+                supabase.from('users').select('*, posyandu:posyandu_id(nama)').order('nama_lengkap'),
                 supabase.from('posyandu').select('id, nama').order('nama'),
             ]);
             if (usersRes.error) throw usersRes.error;
@@ -119,14 +119,14 @@ export default function AdminPenggunaClient() {
 
     const handleFormChange = (field: string, value: string) => {
         // Auto capitalize for text fields (excluding nik, no_hp, rt, rw which are numeric in spirit or specific)
-        const capitalizedValue = (field === 'nama') ? value.toUpperCase() : value;
+        const capitalizedValue = (field === 'nama_lengkap') ? value.toUpperCase() : value;
         setFormData((prev) => ({ ...prev, [field]: capitalizedValue }));
         if (formErrors[field]) setFormErrors((prev) => ({ ...prev, [field]: '' }));
     };
 
     const validateForm = () => {
         const errors: Record<string, string> = {};
-        if (!formData.nama.trim()) errors.nama = 'Nama wajib diisi';
+        if (!formData.nama_lengkap.trim()) errors.nama_lengkap = 'Nama wajib diisi';
         if (!formData.no_hp.trim()) errors.no_hp = 'No HP wajib diisi';
         if (!formData.role) errors.role = 'Role wajib dipilih';
         if (formData.role !== 'ADMIN' && !formData.posyandu_id) errors.posyandu_id = 'Posyandu wajib dipilih';
@@ -137,7 +137,7 @@ export default function AdminPenggunaClient() {
     const openEditForm = (user: UserItem) => {
         setEditingUser(user);
         setFormData({
-            nama: user.nama,
+            nama_lengkap: user.nama_lengkap,
             no_hp: user.no_hp,
             nik: user.nik,
             role: user.role,
@@ -157,7 +157,7 @@ export default function AdminPenggunaClient() {
                 const { error } = await supabase
                     .from('users')
                     .update({
-                        nama: formData.nama.trim(),
+                        nama_lengkap: formData.nama_lengkap.trim(),
                         no_hp: formData.no_hp.trim(),
                         nik: formData.nik.trim(),
                         role: formData.role as UserRole,
@@ -172,7 +172,7 @@ export default function AdminPenggunaClient() {
                 const email = `${formData.no_hp.trim()}@posyandu.local`;
 
                 const userData = {
-                    nama: formData.nama.trim(),
+                    nama_lengkap: formData.nama_lengkap.trim(),
                     no_hp: formData.no_hp.trim(),
                     nik: formData.nik.trim() || null,
                     role: formData.role as UserRole,
@@ -248,14 +248,14 @@ export default function AdminPenggunaClient() {
         setIsImporting(true);
         try {
             const formattedUsers = importData.map(row => ({
-                nama: row.nama || row.Nama || '',
+                nama_lengkap: row.nama || row.Nama || '',
                 no_hp: String(row.no_hp || row.NoHP || row['No HP'] || ''),
                 nik: String(row.nik || row.NIK || ''),
                 role: (row.role || row.Role || 'ORANG_TUA').toUpperCase() as UserRole,
                 posyandu_id: formData.posyandu_id || null, // Default to selected posyandu
                 email: `${String(row.no_hp || row.NoHP || row['No HP'] || '').trim()}@posyandu.local`,
                 password: '12345678'
-            })).filter(u => u.nama && u.no_hp);
+            })).filter(u => u.nama_lengkap && u.no_hp);
 
             const response = await fetch('/api/admin/users/bulk', {
                 method: 'POST',
@@ -286,7 +286,7 @@ export default function AdminPenggunaClient() {
     const closeForm = () => {
         setShowForm(false);
         setEditingUser(null);
-        setFormData({ nama: '', no_hp: '', nik: '', role: '', posyandu_id: '' });
+        setFormData({ nama_lengkap: '', no_hp: '', nik: '', role: '', posyandu_id: '' });
         setFormErrors({});
     };
 
@@ -306,7 +306,7 @@ export default function AdminPenggunaClient() {
     };
 
     const resetPassword = async (user: UserItem) => {
-        if (!confirm(`Reset password ${user.nama} ke 12345678?`)) return;
+        if (!confirm(`Reset password ${user.nama_lengkap} ke 12345678?`)) return;
         try {
             const { error } = await supabase
                 .from('users')
@@ -417,10 +417,10 @@ export default function AdminPenggunaClient() {
                                                     'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs',
                                                     user.role === 'ADMIN' ? 'bg-purple-500' : user.role === 'KADER' ? 'bg-teal-500' : 'bg-blue-500'
                                                 )}>
-                                                    {user.nama.charAt(0).toUpperCase()}
+                                                    {user.nama_lengkap.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="font-semibold text-slate-700">{user.nama}</p>
+                                                    <p className="font-semibold text-slate-700">{user.nama_lengkap}</p>
                                                     {user.nik && <p className="text-[10px] text-slate-400">{user.nik}</p>}
                                                 </div>
                                             </div>
@@ -562,7 +562,7 @@ export default function AdminPenggunaClient() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <Input label="Nama Lengkap" placeholder="Nama lengkap" value={formData.nama} onChange={(e) => handleFormChange('nama', e.target.value)} error={formErrors.nama} />
+                            <Input label="Nama Lengkap" placeholder="Nama lengkap" value={formData.nama_lengkap} onChange={(e) => handleFormChange('nama_lengkap', e.target.value)} error={formErrors.nama_lengkap} />
                             <Input label="No HP" placeholder="08xxxxxxxxxx" value={formData.no_hp} onChange={(e) => handleFormChange('no_hp', e.target.value)} error={formErrors.no_hp} disabled={!!editingUser} helperText={editingUser ? 'No HP tidak bisa diubah' : 'Digunakan sebagai login'} />
                             <Input label="NIK (opsional)" placeholder="16 digit NIK" value={formData.nik} onChange={(e) => handleFormChange('nik', e.target.value)} />
 

@@ -46,27 +46,23 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            // First, look up the user by NIK or phone number to get their email equivalent
-            const { data: userData, error: lookupError } = await supabase
-                .from('users')
-                .select('id, no_hp, nik, role, status')
-                .or(`no_hp.eq.${formData.identifier},nik.eq.${formData.identifier}`)
-                .single();
+            // Use backend API to securely lookup the user's email bypassing RLS restrictions
+            const response = await fetch('/api/auth/lookup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier: formData.identifier })
+            });
 
-            if (lookupError || !userData) {
-                toast.error('No. HP atau NIK tidak ditemukan');
+            if (!response.ok) {
+                const errorData = await response.json();
+                toast.error(errorData.error || 'Terjadi kesalahan saat mencari pengguna');
                 setIsLoading(false);
                 return;
             }
 
-            if (userData.status === 'NONAKTIF') {
-                toast.error('Akun Anda sudah dinonaktifkan. Hubungi Admin.');
-                setIsLoading(false);
-                return;
-            }
+            const { email, role, status } = await response.json();
 
             // Sign in with Supabase Auth using email (we use phone@posyandu.local as email)
-            const email = `${userData.no_hp}@posyandu.local`;
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email,
                 password: formData.password,
@@ -81,7 +77,7 @@ export default function LoginPage() {
             toast.success('Login berhasil!');
 
             // Redirect based on role
-            switch (userData.role) {
+            switch (role) {
                 case 'ADMIN':
                     router.push('/admin/dashboard');
                     break;

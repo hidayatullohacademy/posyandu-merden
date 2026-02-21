@@ -104,12 +104,22 @@ export default function AdminPenggunaClient() {
         try {
             const [usersRes, posyanduRes] = await Promise.all([
                 supabase.from('users').select('*, posyandu:posyandu_id(nama)').order('nama_lengkap'),
-                supabase.from('posyandu').select('id, nama').order('nama'),
+                supabase.from('posyandu').select('id, nama'),
             ]);
             if (usersRes.error) throw usersRes.error;
+
+            const sortedPosyandu = ((posyanduRes.data as PosyanduItem[]) || []).sort((a, b) => {
+                const numA = parseInt(a.nama.match(/\d+/)?.[0] || '0');
+                const numB = parseInt(b.nama.match(/\d+/)?.[0] || '0');
+                return numA - numB;
+            }).map((p) => ({
+                ...p,
+                nama: p.nama.toUpperCase().replace('POSYANDU ', '')
+            }));
+
             setUsers(usersRes.data || []);
             setFilteredUsers(usersRes.data || []);
-            setPosyanduList(posyanduRes.data || []);
+            setPosyanduList(sortedPosyandu);
         } catch {
             toast.error('Gagal memuat data pengguna');
         } finally {

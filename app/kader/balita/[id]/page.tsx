@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi, formatNumber, parseNumber, formatUsiaDetail, isValidNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { User, UserPlus, UserMinus, Search as SearchIcon } from 'lucide-react';
 
 interface BalitaDetail {
     id: string;
@@ -37,6 +38,12 @@ interface KunjunganRecord {
     created_at: string;
 }
 
+interface ParentLink {
+    id: string;
+    nama_lengkap: string;
+    nik: string;
+}
+
 const BULAN_NAMES = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
 
 export default function BalitaDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -57,9 +64,15 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [visitToDeleteId, setVisitToDeleteId] = useState<string | null>(null);
     const [editVisitId, setEditVisitId] = useState<string | null>(null);
     const [showDeleteVisitConfirm, setShowDeleteVisitConfirm] = useState(false);
-    const [visitToDeleteId, setVisitToDeleteId] = useState<string | null>(null);
+
+    const [linkedParents, setLinkedParents] = useState<ParentLink[]>([]);
+    const [allParents, setAllParents] = useState<ParentLink[]>([]);
+    const [showLinkModal, setShowLinkModal] = useState(false);
+    const [isLinking, setIsLinking] = useState(false);
+    const [parentSearch, setParentSearch] = useState('');
 
     const supabase = createClient();
 
@@ -95,11 +108,19 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                     .eq('balita_id', id)
                     .order('tahun', { ascending: false })
                     .order('bulan', { ascending: false }),
+                supabase
+                    .from('orang_tua_balita')
+                    .select('user_id, users(id, nama_lengkap, nik)')
+                    .eq('balita_id', id)
             ]);
 
             if (balitaRes.error) throw balitaRes.error;
             setBalita(balitaRes.data);
             setKunjungan(kunjunganRes.data || []);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const parents = (linkedRes.data || []).map((l: any) => l.users);
+            setLinkedParents(parents);
         } catch {
             toast.error('Gagal memuat data balita');
         } finally {
@@ -242,6 +263,52 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
         }
     };
 
+    const fetchAllParents = async () => {
+        try {
+            const res = await fetch('/api/kader/ortu/list');
+            const json = await res.json();
+            if (json.success) {
+                setAllParents(json.data);
+            }
+        } catch (error) {
+            console.error('Error fetching parents:', error);
+        }
+    };
+
+    const handleLinkParent = async (parentId: string) => {
+        setIsLinking(parentId === 'loading' ? true : false); // UI feedback
+        try {
+            const { error } = await supabase.from('orang_tua_balita').insert({
+                user_id: parentId,
+                balita_id: id
+            });
+            if (error) {
+                if (error.code === '23505') toast.error('Akun sudah ditautkan');
+                else throw error;
+                return;
+            }
+            toast.success('Tautan akun berhasil');
+            fetchData();
+        } catch (error: any) {
+            toast.error(`Gagal menautkan: ${error.message}`);
+        }
+    };
+
+    const handleUnlinkParent = async (parentId: string) => {
+        try {
+            const { error } = await supabase
+                .from('orang_tua_balita')
+                .delete()
+                .eq('user_id', parentId)
+                .eq('balita_id', id);
+            if (error) throw error;
+            toast.success('Tautan akun dicopot');
+            fetchData();
+        } catch (error: any) {
+            toast.error(`Gagal mencopot: ${error.message}`);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="space-y-4 animate-fade-in">
@@ -343,6 +410,42 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                         </p>
                     </div>
                 </div>
+            </Card>
+
+            {/* Parent Account Link */}
+            <Card className="p-4 border-dashed border-slate-200 bg-slate-50/30">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-slate-400" />
+                        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Akses Orang Tua</h3>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-7 text-[10px] text-teal-600 hover:text-teal-700" onClick={() => { fetchAllParents(); setShowLinkModal(true); }}>
+                        <UserPlus className="h-3 w-3 mr-1" /> Tautkan Akun
+                    </Button>
+                </div>
+
+                {linkedParents.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 italic px-1">Belum ada akun orang tua yang ditautkan ke balita ini.</p>
+                ) : (
+                    <div className="space-y-2">
+                        {linkedParents.map(parent => (
+                            <div key={parent.id} className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                                        <User className="h-4 w-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-700">{parent.nama_lengkap}</p>
+                                        <p className="text-[10px] text-slate-400">{parent.nik}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => handleUnlinkParent(parent.id)} className="p-1.5 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition-colors">
+                                    <UserMinus className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </Card>
 
             {/* Last Measurement */}
@@ -646,6 +749,52 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                                     Hapus
                                 </Button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Parent Linking Modal */}
+            {showLinkModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLinkModal(false)} />
+                    <div className="relative w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl animate-scale-in">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-slate-800">Tautkan Orang Tua</h3>
+                            <button onClick={() => setShowLinkModal(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                                <X className="h-5 w-5 text-slate-400" />
+                            </button>
+                        </div>
+
+                        <div className="relative mb-4">
+                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari nama atau NIK..."
+                                value={parentSearch}
+                                onChange={(e) => setParentSearch(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                            />
+                        </div>
+
+                        <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+                            {allParents
+                                .filter(p =>
+                                    p.nama_lengkap.toLowerCase().includes(parentSearch.toLowerCase()) ||
+                                    p.nik.includes(parentSearch)
+                                )
+                                .filter(p => !linkedParents.some(lp => lp.id === p.id))
+                                .map(parent => (
+                                    <div key={parent.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-50 hover:bg-slate-50 transition-colors">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold text-slate-700 truncate">{parent.nama_lengkap}</p>
+                                            <p className="text-[10px] text-slate-400">{parent.nik}</p>
+                                        </div>
+                                        <Button size="sm" className="h-8 text-[10px] bg-teal-600" onClick={() => handleLinkParent(parent.id)}>
+                                            Tautkan
+                                        </Button>
+                                    </div>
+                                ))}
+                            {allParents.length === 0 && <p className="text-center py-8 text-xs text-slate-400">Memuat data orang tua...</p>}
                         </div>
                     </div>
                 </div>

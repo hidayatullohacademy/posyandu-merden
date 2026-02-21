@@ -141,21 +141,94 @@ export default function OrtuAnakDetailPage({ params }: { params: Promise<{ id: s
                             <p className="text-lg font-bold text-blue-800">{formatNumber(lastK.tinggi_badan)} <span className="text-xs font-normal">cm</span></p>
                         </div>
                     </div>
-                    {lastK.status_gizi && (
-                        <div className="mt-2">
-                            <span className={cn(
-                                'text-[10px] font-medium px-2 py-0.5 rounded-full',
-                                lastK.status_gizi === 'NORMAL' && 'bg-green-100 text-green-700',
-                                lastK.status_gizi === 'KURANG' && 'bg-amber-100 text-amber-700',
-                                lastK.status_gizi === 'BURUK' && 'bg-red-100 text-red-700',
-                                lastK.status_gizi === 'LEBIH' && 'bg-blue-100 text-blue-700',
-                            )}>
-                                Status Gizi: {lastK.status_gizi}
-                            </span>
-                        </div>
-                    )}
                 </Card>
             )}
+
+            {/* Growth Chart */}
+            <Card className="p-4 overflow-hidden">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-slate-800">Grafik Berat Badan</h3>
+                    <span className="text-[10px] text-slate-400">Terakhir 6 bulan</span>
+                </div>
+
+                {kunjungan.length < 2 ? (
+                    <div className="h-32 flex flex-col items-center justify-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        <TrendingUp className="h-6 w-6 text-slate-200 mb-1" />
+                        <p className="text-[10px] text-slate-400">Butuh minimal 2 data timbang</p>
+                    </div>
+                ) : (
+                    <div className="relative h-40 w-full pt-2">
+                        {/* Simple SVG Line Chart */}
+                        <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
+                            {/* Grid Lines */}
+                            {[0, 1, 2, 3].map(i => (
+                                <line
+                                    key={i}
+                                    x1="0" y1={150 - (i * 50)}
+                                    x2="400" y2={150 - (i * 50)}
+                                    stroke="#f1f5f9"
+                                    strokeWidth="1"
+                                />
+                            ))}
+
+                            {(() => {
+                                const data = [...kunjungan].reverse().slice(-6);
+                                const maxBB = Math.max(...data.map(d => d.berat_badan)) * 1.2;
+                                const minBB = Math.min(...data.map(d => d.berat_badan)) * 0.8;
+                                const range = maxBB - minBB;
+
+                                const points = data.map((d, i) => {
+                                    const x = (i / (data.length - 1)) * 400;
+                                    const y = 150 - ((d.berat_badan - minBB) / range) * 120 - 15;
+                                    return { x, y, val: d.berat_badan };
+                                });
+
+                                const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                                const areaData = pathData + ` L ${points[points.length - 1].x} 150 L 0 150 Z`;
+
+                                return (
+                                    <>
+                                        {/* Area under curve */}
+                                        <path d={areaData} fill="url(#grad)" opacity="0.1" />
+                                        <defs>
+                                            <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                                <stop offset="0%" stopColor="#3b82f6" />
+                                                <stop offset="100%" stopColor="white" />
+                                            </linearGradient>
+                                        </defs>
+
+                                        {/* Line */}
+                                        <path
+                                            d={pathData}
+                                            fill="none"
+                                            stroke="#3b82f6"
+                                            strokeWidth="3"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+
+                                        {/* Points */}
+                                        {points.map((p, i) => (
+                                            <g key={i}>
+                                                <circle cx={p.x} cy={p.y} r="4" fill="white" stroke="#3b82f6" strokeWidth="2" />
+                                                <text
+                                                    x={p.x} y={p.y - 10}
+                                                    textAnchor="middle"
+                                                    fontSize="10"
+                                                    fontWeight="bold"
+                                                    fill="#64748b"
+                                                >
+                                                    {formatNumber(p.val)}
+                                                </text>
+                                            </g>
+                                        ))}
+                                    </>
+                                );
+                            })()}
+                        </svg>
+                    </div>
+                )}
+            </Card>
 
             {/* History */}
             <h3 className="text-sm font-semibold text-slate-700">Riwayat Timbang</h3>

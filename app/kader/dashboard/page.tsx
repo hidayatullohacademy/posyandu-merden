@@ -20,7 +20,6 @@ import toast from 'react-hot-toast';
 interface Stats {
     balitaCount: number;
     lansiaCount: number;
-    nextJadwal: any | null;
 }
 
 export default function KaderDashboard() {
@@ -28,7 +27,6 @@ export default function KaderDashboard() {
     const [stats, setStats] = useState<Stats>({
         balitaCount: 0,
         lansiaCount: 0,
-        nextJadwal: null
     });
     const [isLoading, setIsLoading] = useState(true);
     const supabase = createClient();
@@ -50,23 +48,14 @@ export default function KaderDashboard() {
                         setUserName(userData.nama);
 
                         // 2. Fetch stats based on posyandu_id
-                        const [balitaRes, lansiaRes, jadwalRes] = await Promise.all([
+                        const [balitaRes, lansiaRes] = await Promise.all([
                             supabase.from('balita').select('*', { count: 'exact', head: true }).eq('posyandu_id', userData.posyandu_id).eq('is_active', true),
                             supabase.from('lansia').select('*', { count: 'exact', head: true }).eq('posyandu_id', userData.posyandu_id).eq('is_active', true),
-                            supabase.from('jadwal_posyandu')
-                                .select('*, posyandu:posyandu_id(nama)')
-                                .eq('posyandu_id', userData.posyandu_id)
-                                .eq('status', 'DISETUJUI')
-                                .gte('tanggal', new Date().toISOString().split('T')[0])
-                                .order('tanggal', { ascending: true })
-                                .limit(1)
-                                .single()
                         ]);
 
                         setStats({
                             balitaCount: balitaRes.count || 0,
                             lansiaCount: lansiaRes.count || 0,
-                            nextJadwal: jadwalRes.data || null
                         });
                     }
                 }
@@ -104,25 +93,21 @@ export default function KaderDashboard() {
                 <div className="relative overflow-hidden group">
                     <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 min-h-[180px] transition-all duration-300">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                            <CalendarDays className="h-24 w-24" />
+                            <Activity className="h-24 w-24" />
                         </div>
                         <div className="relative z-10">
                             <div className="bg-white/10 w-12 h-12 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md border border-white/20">
-                                <CalendarDays className="h-6 w-6 text-teal-400" />
+                                <Activity className="h-6 w-6 text-emerald-400" />
                             </div>
-                            <p className="text-slate-400 font-medium text-sm">Jadwal Terdekat</p>
-                            <h3 className="text-xl font-bold mt-1 group-hover:text-teal-400 transition-colors">
-                                {isLoading ? '...' : (stats.nextJadwal?.posyandu?.nama || 'Belum ada jadwal')}
-                            </h3>
-                            {stats.nextJadwal && (
-                                <div className="mt-4 flex items-center gap-2 text-xs font-medium text-teal-400 bg-teal-400/10 w-fit px-3 py-1.5 rounded-full border border-teal-400/20">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
-                                    </span>
-                                    {formatDate(stats.nextJadwal.tanggal)} • {stats.nextJadwal.waktu_mulai}
-                                </div>
-                            )}
+                            <p className="text-slate-400 font-medium text-sm">Status Posyandu</p>
+                            <h3 className="text-xl font-bold mt-1">Aktif & Terintegrasi</h3>
+                            <div className="mt-4 flex items-center gap-2 text-xs font-medium text-emerald-400 bg-emerald-400/10 w-fit px-3 py-1.5 rounded-full border border-emerald-400/20">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                Desa Merden Terintegrasi
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -206,13 +191,13 @@ export default function KaderDashboard() {
                         </div>
                     </Link>
 
-                    <Link href="/kader/jadwal" className="group">
+                    <Link href="/kader/notifikasi" className="group">
                         <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
                             <div className="h-14 w-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-indigo-100/50">
-                                <CalendarDays className="h-7 w-7 text-indigo-600" />
+                                <Bell className="h-7 w-7 text-indigo-600" />
                             </div>
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Agenda Desa</h3>
-                            <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Lihat & kelola jadwal posyandu mendatang</p>
+                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Pesan Sistem</h3>
+                            <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Pemberitahuan & pengingat dari puskesmas</p>
                         </div>
                     </Link>
 

@@ -6,7 +6,6 @@ import {
     LayoutDashboard,
     Baby,
     Heart,
-    CalendarDays,
     Syringe,
     Users,
     FileText,
@@ -21,7 +20,6 @@ interface BottomNavProps {
 const adminMenuItems = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Laporan', href: '/admin/laporan', icon: FileText },
-    { label: 'Jadwal', href: '/admin/jadwal', icon: CalendarDays },
     { label: 'Pengguna', href: '/admin/pengguna', icon: Users },
     { label: 'Imunisasi', href: '/admin/imunisasi', icon: Syringe },
 ];
@@ -31,7 +29,6 @@ const kaderMenuItems = [
     { label: 'Balita', href: '/kader/balita', icon: Baby },
     { label: 'Lansia', href: '/kader/lansia', icon: Heart },
     { label: 'Imunisasi', href: '/kader/imunisasi', icon: Syringe },
-    { label: 'Jadwal', href: '/kader/jadwal', icon: CalendarDays },
     { label: 'Ortu', href: '/kader/ortu', icon: Users },
     { label: 'Pengaturan', href: '/kader/pengaturan', icon: Settings },
 ];
@@ -39,7 +36,6 @@ const kaderMenuItems = [
 const ortuMenuItems = [
     { label: 'Beranda', href: '/ortu/dashboard', icon: LayoutDashboard },
     { label: 'Anak Saya', href: '/ortu/anak', icon: Baby },
-    { label: 'Jadwal', href: '/ortu/jadwal', icon: CalendarDays },
     { label: 'Imunisasi', href: '/ortu/imunisasi', icon: Syringe },
 ];
 

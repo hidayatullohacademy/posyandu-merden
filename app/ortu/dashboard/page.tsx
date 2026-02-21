@@ -192,14 +192,14 @@ export default function OrtuDashboard() {
                         </div>
                     </Link>
 
-                    <Link href="/ortu/jadwal" className="block group">
+                    <Link href="/ortu/notifikasi" className="block group">
                         <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all sm:p-5 flex items-center gap-4">
                             <div className="p-3 bg-purple-50 rounded-2xl group-hover:bg-purple-100 group-hover:scale-105 transition-all">
-                                <CalendarDays className="h-6 w-6 text-purple-500" />
+                                <Bell className="h-6 w-6 text-purple-500" />
                             </div>
                             <div className="flex-1">
-                                <h4 className="text-sm font-bold text-slate-800">Jadwal Posyandu</h4>
-                                <p className="text-xs text-slate-500 mt-1">Estimasi kedatangan</p>
+                                <h4 className="text-sm font-bold text-slate-800">Pesan & Info</h4>
+                                <p className="text-xs text-slate-500 mt-1">Informasi kegiatan desa</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-purple-500 transition-colors" />

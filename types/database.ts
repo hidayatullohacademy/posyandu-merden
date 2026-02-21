@@ -7,17 +7,6 @@
 export type UserRole = 'ADMIN' | 'KADER' | 'ORANG_TUA';
 export type NikStatus = 'ASLI' | 'SEMENTARA';
 export type JenisKelamin = 'L' | 'P';
-export type StatusUsulanJadwal = 'PENDING' | 'DISETUJUI' | 'DITOLAK';
-export type JenisPerubahanJadwal = 'GESER_TANGGAL' | 'GANTI_LOKASI' | 'TANGGAL_DAN_LOKASI' | 'DITUNDA';
-export type AlasanPerubahanJadwal =
-  | 'HARI_LIBUR_NASIONAL'
-  | 'HARI_BESAR_KEAGAMAAN'
-  | 'CUACA_EKSTREM'
-  | 'LOKASI_TIDAK_BISA'
-  | 'KADER_SAKIT'
-  | 'BIDAN_TIDAK_HADIR'
-  | 'KEGIATAN_DESA_BENTROK'
-  | 'LAINNYA';
 export type StatusImunisasi = 'BELUM' | 'SEGERA' | 'SELESAI' | 'TERLAMBAT';
 export type TempatImunisasi = 'POSYANDU' | 'PUSKESMAS' | 'RS' | 'LAINNYA';
 export type StatusNotifikasi = 'BELUM_DIKIRIM' | 'TERKIRIM';
@@ -175,40 +164,6 @@ export interface ImunisasiBalita {
   dicatat_oleh: string | null;
   created_at: string;
   updated_at: string;
-}
-
-// --- 10. jadwal_posyandu ---
-export interface JadwalPosyandu {
-  id: string;
-  posyandu_id: string;
-  bulan: number;
-  tahun: number;
-  tanggal: string;
-  lokasi: string;
-  status: 'AKTIF' | 'DIUBAH' | 'DITUNDA';
-  catatan: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-// --- 11. usulan_jadwal ---
-export interface UsulanJadwal {
-  id: string;
-  posyandu_id: string;
-  diusulkan_oleh: string;
-  bulan: number;
-  tahun: number;
-  jenis_perubahan: JenisPerubahanJadwal;
-  alasan: AlasanPerubahanJadwal;
-  alasan_detail: string | null;
-  tanggal_baru: string | null;
-  lokasi_baru: string | null;
-  status: StatusUsulanJadwal;
-  is_mendesak: boolean;
-  diproses_oleh: string | null;
-  alasan_penolakan: string | null;
-  diproses_at: string | null;
-  created_at: string;
 }
 
 // --- 12. laporan_bulanan_balita ---

@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import {
     LayoutDashboard,
     FileText,
-    CalendarDays,
     Users,
     Syringe,
     Bell,
@@ -27,7 +26,6 @@ interface SidebarProps {
 const adminMenuItems = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Laporan', href: '/admin/laporan', icon: FileText },
-    { label: 'Jadwal', href: '/admin/jadwal', icon: CalendarDays },
     { label: 'Pengguna', href: '/admin/pengguna', icon: Users },
     { label: 'Imunisasi', href: '/admin/imunisasi', icon: Syringe },
     { label: 'Notifikasi', href: '/admin/notifikasi', icon: Bell },
@@ -38,7 +36,6 @@ const kaderMenuItems = [
     { label: 'Daftar Balita', href: '/kader/balita', icon: Baby },
     { label: 'Daftar Lansia', href: '/kader/lansia', icon: Heart },
     { label: 'Imunisasi', href: '/kader/imunisasi', icon: Syringe },
-    { label: 'Jadwal', href: '/kader/jadwal', icon: CalendarDays },
     { label: 'Orang Tua', href: '/kader/ortu', icon: Users },
 ];
 

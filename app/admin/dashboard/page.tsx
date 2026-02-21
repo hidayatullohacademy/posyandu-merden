@@ -5,12 +5,12 @@ import {
     Baby,
     Heart,
     Users,
-    CalendarDays,
     TrendingUp,
     AlertTriangle,
     Bell,
     CheckCircle2,
     Download,
+    Clock,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                     <Button variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 h-10 px-4 rounded-xl shadow-sm">
-                        <CalendarDays className="h-4 w-4 mr-2 text-slate-400" />
+                        <Clock className="h-4 w-4 mr-2 text-slate-400" />
                         Pilih Periode
                     </Button>
                     <Link href="/admin/laporan">
@@ -175,13 +175,12 @@ export default function AdminDashboard() {
                     <Card className="p-5 border-slate-200 shadow-sm">
                         <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
                             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                                <CalendarDays className="h-4 w-4 text-teal-500" /> Antrean Jadwal
+                                <TrendingUp className="h-4 w-4 text-teal-500" /> Ringkasan Aktivitas
                             </h2>
-                            <Link href="/admin/jadwal" className="text-xs font-bold text-teal-600 hover:text-teal-700 font-bold uppercase tracking-widest leading-none">Manajemen Jadwal &rarr;</Link>
                         </div>
                         <div className="p-12 text-center">
-                            <CalendarDays className="h-10 w-10 text-slate-100 mx-auto mb-3" />
-                            <p className="text-sm text-slate-400 font-medium">Tidak ada usulan jadwal baru dari kader.</p>
+                            <CheckCircle2 className="h-10 w-10 text-slate-100 mx-auto mb-3" />
+                            <p className="text-sm text-slate-400 font-medium">Semua data operasional terpusat dan aman.</p>
                         </div>
                     </Card>
                 </div>

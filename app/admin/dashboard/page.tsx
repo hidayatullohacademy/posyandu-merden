@@ -60,9 +60,9 @@ export default function AdminDashboard() {
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">Dashboard Utama</h1>
+                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">Dashboard Admin Desa Merden</h1>
                     <p className="text-sm font-medium text-slate-500 mt-1">
-                        Ringkasan Operasional Posyandu ILP Desa Merden
+                        Monitoring Real-time Operasional Posyandu ILP
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
                                 {isLoading ? '...' : stats.totalBalita}
                             </h3>
                             <div className="flex items-center gap-1 mt-2">
-                                <span className="text-[10px] text-slate-400 font-medium lowercase italic">Total terdaftar</span>
+                                <span className="text-[10px] text-slate-400 font-medium lowercase italic">Total terdaftar di sistem</span>
                             </div>
                         </div>
                         <div className="p-2.5 bg-blue-50/80 rounded-xl text-blue-600">
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
                                 {isLoading ? '...' : stats.totalLansia}
                             </h3>
                             <div className="flex items-center gap-1 mt-2">
-                                <span className="text-[10px] text-slate-400 font-medium lowercase italic">Total terdaftar</span>
+                                <span className="text-[10px] text-slate-400 font-medium lowercase italic">Total terdaftar di sistem</span>
                             </div>
                         </div>
                         <div className="p-2.5 bg-rose-50/80 rounded-xl text-rose-600">
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
                                 {isLoading ? '...' : stats.totalKader}
                             </h3>
                             <div className="flex items-center gap-1 mt-2">
-                                <span className="text-[10px] text-slate-400 font-medium lowercase italic">Total akun kader</span>
+                                <span className="text-[10px] text-slate-400 font-medium lowercase italic">Petugas lapangan aktif</span>
                             </div>
                         </div>
                         <div className="p-2.5 bg-purple-50/80 rounded-xl text-purple-600">
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
                                 {isLoading ? '...' : stats.totalKunjungan}
                             </h3>
                             <div className="flex items-center gap-1 mt-2">
-                                <span className="text-[10px] text-slate-400 font-medium lowercase italic">Histori pemeriksaan</span>
+                                <span className="text-[10px] text-slate-400 font-medium lowercase italic">Riwayat pemeriksaan rill</span>
                             </div>
                         </div>
                         <div className="p-2.5 bg-teal-50/80 rounded-xl text-teal-600">
@@ -158,30 +158,30 @@ export default function AdminDashboard() {
                     <Card className="overflow-hidden border-slate-200 shadow-sm">
                         <div className="bg-slate-50/80 border-b border-slate-100 p-5 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-red-100 rounded-lg">
-                                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                                <div className="p-2 bg-slate-100 rounded-lg">
+                                    <AlertTriangle className="h-4 w-4 text-slate-400" />
                                 </div>
-                                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Perlu Perhatian Khusus</h2>
+                                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Peringatan Kesehatan</h2>
                             </div>
-                            <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full">0 Kasus Aktif</span>
+                            <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full">Sistem Monitoring</span>
                         </div>
 
-                        <div className="p-8 text-center bg-white">
-                            <AlertTriangle className="h-8 w-8 text-slate-100 mx-auto mb-2" />
-                            <p className="text-xs text-slate-400 font-medium">Tidak ada kasus yang perlu perhatian khusus hari ini</p>
+                        <div className="p-12 text-center bg-white">
+                            <CheckCircle2 className="h-10 w-10 text-teal-100 mx-auto mb-3" />
+                            <p className="text-sm text-slate-400 font-medium">Semua data kesehatan dalam batas normal atau belum ada rujukan masuk.</p>
                         </div>
                     </Card>
 
                     <Card className="p-5 border-slate-200 shadow-sm">
                         <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
                             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-teal-500" /> Usulan Jadwal Posyandu
+                                <CalendarDays className="h-4 w-4 text-teal-500" /> Antrean Jadwal
                             </h2>
-                            <Link href="/admin/jadwal" className="text-xs font-bold text-teal-600 hover:text-teal-700">Lihat Semua &rarr;</Link>
+                            <Link href="/admin/jadwal" className="text-xs font-bold text-teal-600 hover:text-teal-700 font-bold uppercase tracking-widest leading-none">Manajemen Jadwal &rarr;</Link>
                         </div>
-                        <div className="p-8 text-center">
-                            <CalendarDays className="h-8 w-8 text-slate-100 mx-auto mb-2" />
-                            <p className="text-xs text-slate-400 font-medium">Tidak ada usulan jadwal baru</p>
+                        <div className="p-12 text-center">
+                            <CalendarDays className="h-10 w-10 text-slate-100 mx-auto mb-3" />
+                            <p className="text-sm text-slate-400 font-medium">Tidak ada usulan jadwal baru dari kader.</p>
                         </div>
                     </Card>
                 </div>
@@ -191,28 +191,28 @@ export default function AdminDashboard() {
                     <Card className="p-5 border-slate-200 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                                <Bell className="h-4 w-4 text-slate-400" /> Notifikasi Sistem
+                                <Bell className="h-4 w-4 text-slate-400" /> Pusat Notifikasi
                             </h2>
                         </div>
-                        <div className="py-6 text-center">
-                            <Bell className="h-8 w-8 text-slate-100 mx-auto mb-2" />
-                            <p className="text-xs text-slate-400 font-medium">Tidak ada notifikasi baru</p>
+                        <div className="py-10 text-center">
+                            <Bell className="h-10 w-10 text-slate-100 mx-auto mb-3" />
+                            <p className="text-sm text-slate-400 font-medium">Belum ada pesan sistem baru.</p>
                         </div>
                     </Card>
 
-                    <Card className="p-5 bg-slate-900 border-slate-800 text-white shadow-lg overflow-hidden relative">
+                    <Card className="p-6 bg-slate-900 border-slate-800 text-white shadow-lg overflow-hidden relative">
                         {/* Decorative element */}
                         <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10" />
 
                         <div className="relative z-10 text-center py-4">
-                            <h2 className="text-sm font-bold text-teal-400 uppercase tracking-wide mb-2 flex items-center gap-2 justify-center">
-                                <TrendingUp className="h-4 w-4" /> Performa Posyandu
+                            <h2 className="text-sm font-bold text-teal-400 uppercase tracking-wide mb-3 flex items-center gap-2 justify-center">
+                                <TrendingUp className="h-4 w-4" /> Kinerja Layanan
                             </h2>
-                            <p className="text-xs text-slate-300 leading-relaxed font-medium mb-4">
-                                Pantau perkembangan layanan kesehatan desa secara real-time.
+                            <p className="text-xs text-slate-300 leading-relaxed font-medium mb-6">
+                                Pantau perkembangan kesehatan masyarakat Desa Merden melalui data statistik yang terhimpun.
                             </p>
-                            <Link href="/admin/laporan" className="inline-flex items-center justify-center w-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2.5 rounded-lg border border-white/10 transition-colors">
-                                Lihat Laporan Lengkap
+                            <Link href="/admin/laporan" className="inline-flex items-center justify-center w-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-3 rounded-xl border border-white/10 transition-colors shadow-sm">
+                                Buka Laporan Lengkap
                             </Link>
                         </div>
                     </Card>

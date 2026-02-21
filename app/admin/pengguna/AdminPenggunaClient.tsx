@@ -19,7 +19,7 @@ interface UserItem {
     no_hp: string;
     nik: string;
     role: UserRole;
-    is_active: boolean;
+    status: 'AKTIF' | 'NONAKTIF';
     is_default_password: boolean;
     posyandu_id: string | null;
     posyandu?: { nama: string } | null;
@@ -301,14 +301,15 @@ export default function AdminPenggunaClient() {
     };
 
     const toggleActive = async (user: UserItem) => {
+        const newStatus = user.status === 'AKTIF' ? 'NONAKTIF' : 'AKTIF';
         try {
             const { error } = await supabase
                 .from('users')
-                .update({ is_active: !user.is_active })
+                .update({ status: newStatus })
                 .eq('id', user.id);
 
             if (error) throw error;
-            toast.success(user.is_active ? 'Pengguna dinonaktifkan' : 'Pengguna diaktifkan');
+            toast.success(newStatus === 'NONAKTIF' ? 'Pengguna dinonaktifkan' : 'Pengguna diaktifkan');
             fetchData();
         } catch {
             toast.error('Gagal mengubah status');
@@ -444,8 +445,8 @@ export default function AdminPenggunaClient() {
                                         <td className="px-5 py-3 text-slate-500 text-xs">{user.posyandu?.nama || '—'}</td>
                                         <td className="px-5 py-3">
                                             <div className="flex items-center gap-1.5">
-                                                <div className={cn('w-2 h-2 rounded-full', user.is_active ? 'bg-green-500' : 'bg-slate-300')} />
-                                                <span className="text-xs">{user.is_active ? 'Aktif' : 'Nonaktif'}</span>
+                                                <div className={cn('w-2 h-2 rounded-full', user.status === 'AKTIF' ? 'bg-green-500' : 'bg-slate-300')} />
+                                                <span className="text-xs">{user.status === 'AKTIF' ? 'Aktif' : 'Nonaktif'}</span>
                                             </div>
                                         </td>
                                         <td className="px-5 py-3">
@@ -453,7 +454,7 @@ export default function AdminPenggunaClient() {
                                                 <button onClick={() => openEditForm(user)} className="p-1.5 hover:bg-teal-50 rounded-lg text-teal-600 transition-colors" title="Edit">
                                                     <Edit className="h-3.5 w-3.5" />
                                                 </button>
-                                                <button onClick={() => toggleActive(user)} className={cn('p-1.5 rounded-lg transition-colors', user.is_active ? 'hover:bg-red-50 text-red-400' : 'hover:bg-green-50 text-green-500')} title={user.is_active ? 'Nonaktifkan' : 'Aktifkan'}>
+                                                <button onClick={() => toggleActive(user)} className={cn('p-1.5 rounded-lg transition-colors', user.status === 'AKTIF' ? 'hover:bg-red-50 text-red-400' : 'hover:bg-green-50 text-green-500')} title={user.status === 'AKTIF' ? 'Nonaktifkan' : 'Aktifkan'}>
                                                     <UserCheck className="h-3.5 w-3.5" />
                                                 </button>
                                                 <button onClick={() => resetPassword(user)} className="p-1.5 hover:bg-amber-50 rounded-lg text-amber-500 transition-colors" title="Reset Password">

@@ -175,7 +175,6 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             const { error } = await supabase.from('kunjungan_balita').insert({
                 balita_id: id,
                 posyandu_id: balita!.posyandu_id,
-                tanggal_kunjungan: formData.periode_kunjungan, // record absolute date value
                 bulan: parseInt(formData.periode_kunjungan.split('-')[1]),
                 tahun: parseInt(formData.periode_kunjungan.split('-')[0]),
                 berat_badan: bb,

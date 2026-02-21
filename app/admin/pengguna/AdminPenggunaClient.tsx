@@ -319,15 +319,22 @@ export default function AdminPenggunaClient() {
     const resetPassword = async (user: UserItem) => {
         if (!confirm(`Reset password ${user.nama_lengkap} ke 12345678?`)) return;
         try {
-            const { error } = await supabase
-                .from('users')
-                .update({ is_default_password: true })
-                .eq('id', user.id);
+            const response = await fetch('/api/admin/users/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: user.id })
+            });
 
-            if (error) throw error;
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Gagal mereset password');
+            }
+
             toast.success('Password berhasil direset ke 12345678');
-        } catch {
-            toast.error('Gagal mereset password');
+            fetchData();
+        } catch (error: unknown) {
+            const e = error as Error;
+            toast.error(e.message || 'Gagal mereset password');
         }
     };
 

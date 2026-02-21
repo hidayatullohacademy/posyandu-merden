@@ -57,7 +57,7 @@ export async function POST(request: Request) {
                         nik: user.nik?.trim() || null,
                         role: user.role,
                         posyandu_id: user.posyandu_id || null,
-                        is_active: true,
+                        status: 'AKTIF',
                         is_default_password: true,
                     });
 

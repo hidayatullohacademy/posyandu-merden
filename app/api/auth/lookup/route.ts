@@ -33,8 +33,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Akun Anda sudah dinonaktifkan. Hubungi Admin.', status: 'NONAKTIF' }, { status: 403 });
         }
 
+        // Fetch exact email from auth.users to prevent sync issues if an Admin edited their no_hp
+        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userData.id);
+        const email = (!authError && authUser?.user?.email) 
+            ? authUser.user.email 
+            : `${userData.no_hp}@posyandu.local`;
+
         return NextResponse.json({ 
-            email: `${userData.no_hp}@posyandu.local`,
+            email: email,
             role: userData.role,
             status: userData.status 
         });

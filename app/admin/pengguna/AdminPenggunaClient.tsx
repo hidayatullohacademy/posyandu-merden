@@ -118,7 +118,9 @@ export default function AdminPenggunaClient() {
     };
 
     const handleFormChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
+        // Auto capitalize for text fields (excluding nik, no_hp, rt, rw which are numeric in spirit or specific)
+        const capitalizedValue = (field === 'nama') ? value.toUpperCase() : value;
+        setFormData((prev) => ({ ...prev, [field]: capitalizedValue }));
         if (formErrors[field]) setFormErrors((prev) => ({ ...prev, [field]: '' }));
     };
 
@@ -415,7 +417,7 @@ export default function AdminPenggunaClient() {
                                                     'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs',
                                                     user.role === 'ADMIN' ? 'bg-purple-500' : user.role === 'KADER' ? 'bg-teal-500' : 'bg-blue-500'
                                                 )}>
-                                                    {user.nama.charAt(0)}
+                                                    {user.nama.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold text-slate-700">{user.nama}</p>

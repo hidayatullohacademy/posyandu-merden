@@ -84,7 +84,10 @@ export default function KaderBalitaPage() {
     };
 
     const handleFormChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
+        // Auto capitalize for text fields (excluding date and select if they were text, but here we enforce capitalize)
+        const capitalizedValue = (field === 'nama' || field === 'nama_ibu') ? value.toUpperCase() : value;
+
+        setFormData((prev) => ({ ...prev, [field]: capitalizedValue }));
         if (formErrors[field]) {
             setFormErrors((prev) => ({ ...prev, [field]: '' }));
         }
@@ -242,7 +245,7 @@ export default function KaderBalitaPage() {
                                             ? 'bg-gradient-to-br from-blue-400 to-blue-600'
                                             : 'bg-gradient-to-br from-pink-400 to-pink-600'
                                     )}>
-                                        {balita.nama.charAt(0)}
+                                        {balita.nama.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
@@ -321,25 +324,25 @@ export default function KaderBalitaPage() {
                                         type="button"
                                         onClick={() => handleFormChange('jenis_kelamin', 'L')}
                                         className={cn(
-                                            'py-2.5 rounded-xl border text-sm font-medium transition-all',
+                                            'py-2.5 rounded-xl border text-[10px] font-bold transition-all uppercase tracking-wider',
                                             formData.jenis_kelamin === 'L'
                                                 ? 'bg-blue-50 border-blue-300 text-blue-700'
                                                 : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
                                         )}
                                     >
-                                        ♂ Laki-laki
+                                        ♂ LAKI-LAKI
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => handleFormChange('jenis_kelamin', 'P')}
                                         className={cn(
-                                            'py-2.5 rounded-xl border text-sm font-medium transition-all',
+                                            'py-2.5 rounded-xl border text-[10px] font-bold transition-all uppercase tracking-wider',
                                             formData.jenis_kelamin === 'P'
                                                 ? 'bg-pink-50 border-pink-300 text-pink-700'
                                                 : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
                                         )}
                                     >
-                                        ♀ Perempuan
+                                        ♀ PEREMPUAN
                                     </button>
                                 </div>
                                 {formErrors.jenis_kelamin && (

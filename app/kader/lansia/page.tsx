@@ -81,7 +81,11 @@ export default function KaderLansiaPage() {
     };
 
     const handleFormChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
+        // Auto capitalize for text fields
+        const capitalizedFields = ['nama_lengkap', 'tempat_lahir', 'alamat'];
+        const capitalizedValue = capitalizedFields.includes(field) ? value.toUpperCase() : value;
+
+        setFormData((prev) => ({ ...prev, [field]: capitalizedValue }));
         if (formErrors[field]) setFormErrors((prev) => ({ ...prev, [field]: '' }));
     };
 
@@ -210,19 +214,19 @@ export default function KaderLansiaPage() {
                                     <div className={cn(
                                         'w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm',
                                         lansia.jenis_kelamin === 'L'
-                                            ? 'bg-gradient-to-br from-emerald-400 to-emerald-600'
-                                            : 'bg-gradient-to-br from-rose-400 to-rose-600'
+                                            ? 'bg-gradient-to-br from-blue-400 to-blue-600'
+                                            : 'bg-gradient-to-br from-pink-400 to-pink-600'
                                     )}>
-                                        {lansia.nama_lengkap.charAt(0)}
+                                        {lansia.nama_lengkap.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <h3 className="text-sm font-semibold text-slate-700 truncate">{lansia.nama_lengkap}</h3>
                                             <span className={cn(
-                                                'shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full',
-                                                lansia.jenis_kelamin === 'L' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                                'shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-tighter',
+                                                lansia.jenis_kelamin === 'L' ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600'
                                             )}>
-                                                {lansia.jenis_kelamin === 'L' ? 'L' : 'P'}
+                                                {lansia.jenis_kelamin === 'L' ? 'LAKI-LAKI' : 'PEREMPUAN'}
                                             </span>
                                         </div>
                                         <p className="text-xs text-slate-400 truncate">
@@ -256,8 +260,8 @@ export default function KaderLansiaPage() {
                             <div className="space-y-1.5">
                                 <label className="block text-sm font-medium text-slate-700">Jenis Kelamin</label>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button type="button" onClick={() => handleFormChange('jenis_kelamin', 'L')} className={cn('py-2.5 rounded-xl border text-sm font-medium transition-all', formData.jenis_kelamin === 'L' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300')}>♂ Laki-laki</button>
-                                    <button type="button" onClick={() => handleFormChange('jenis_kelamin', 'P')} className={cn('py-2.5 rounded-xl border text-sm font-medium transition-all', formData.jenis_kelamin === 'P' ? 'bg-rose-50 border-rose-300 text-rose-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300')}>♀ Perempuan</button>
+                                    <button type="button" onClick={() => handleFormChange('jenis_kelamin', 'L')} className={cn('py-2.5 rounded-xl border text-[10px] font-bold transition-all uppercase tracking-wider', formData.jenis_kelamin === 'L' ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300')}>♂ LAKI-LAKI</button>
+                                    <button type="button" onClick={() => handleFormChange('jenis_kelamin', 'P')} className={cn('py-2.5 rounded-xl border text-[10px] font-bold transition-all uppercase tracking-wider', formData.jenis_kelamin === 'P' ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300')}>♀ PEREMPUAN</button>
                                 </div>
                                 {formErrors.jenis_kelamin && <p className="text-xs text-red-500 font-medium">{formErrors.jenis_kelamin}</p>}
                             </div>

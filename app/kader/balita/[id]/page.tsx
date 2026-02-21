@@ -375,7 +375,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                             ? 'bg-gradient-to-br from-blue-400 to-blue-600'
                             : 'bg-gradient-to-br from-pink-400 to-pink-600'
                     )}>
-                        {balita.nama.charAt(0)}
+                        {balita.nama.charAt(0).toUpperCase()}
                     </div>
                     <div>
                         <h2 className="text-lg font-bold text-slate-800">{balita.nama}</h2>
@@ -392,7 +392,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                     <div className="bg-slate-50 rounded-xl p-3">
                         <p className="text-[10px] text-slate-400 mb-0.5">Jenis Kelamin</p>
                         <p className="font-semibold text-slate-700">
-                            {balita.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
+                            {balita.jenis_kelamin === 'L' ? 'LAKI-LAKI' : 'PEREMPUAN'}
                         </p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-3">
@@ -681,14 +681,14 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                             </button>
                         </div>
                         <form onSubmit={handleEditBalita} className="space-y-4">
-                            <Input label="Nama Balita" value={editFormData.nama} onChange={(e) => setEditFormData(p => ({ ...p, nama: e.target.value }))} required />
-                            <Input label="Nama Ibu" value={editFormData.nama_ibu} onChange={(e) => setEditFormData(p => ({ ...p, nama_ibu: e.target.value }))} required />
+                            <Input label="Nama Balita" value={editFormData.nama} onChange={(e) => setEditFormData(p => ({ ...p, nama: e.target.value.toUpperCase() }))} required />
+                            <Input label="Nama Ibu" value={editFormData.nama_ibu} onChange={(e) => setEditFormData(p => ({ ...p, nama_ibu: e.target.value.toUpperCase() }))} required />
                             <Input label="Tanggal Lahir" type="date" value={editFormData.tanggal_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tanggal_lahir: e.target.value }))} required />
                             <div className="space-y-1.5">
                                 <label className="block text-sm font-medium text-slate-700">Jenis Kelamin</label>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'L' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'L' ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold' : 'bg-white border-slate-200')}>Laki-laki</button>
-                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'P' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'P' ? 'bg-pink-50 border-pink-300 text-pink-700 font-bold' : 'bg-white border-slate-200')}>Perempuan</button>
+                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'L' }))} className={cn('py-2 rounded-xl border text-[10px] font-bold transition-all uppercase tracking-wider', editFormData.jenis_kelamin === 'L' ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-400')}>LAKI-LAKI</button>
+                                    <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'P' }))} className={cn('py-2 rounded-xl border text-[10px] font-bold transition-all uppercase tracking-wider', editFormData.jenis_kelamin === 'P' ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-slate-200 text-slate-400')}>PEREMPUAN</button>
                                 </div>
                             </div>
                             <Input label="NIK (Opsional)" value={editFormData.nik} onChange={(e) => setEditFormData(p => ({ ...p, nik: e.target.value }))} />

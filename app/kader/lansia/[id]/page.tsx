@@ -348,9 +348,9 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 <div className="flex items-center gap-4 mb-4">
                     <div className={cn(
                         'w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-xl',
-                        lansia.jenis_kelamin === 'L' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-rose-400 to-rose-600'
+                        lansia.jenis_kelamin === 'L' ? 'bg-gradient-to-br from-blue-400 to-blue-600' : 'bg-gradient-to-br from-pink-400 to-pink-600'
                     )}>
-                        {lansia.nama_lengkap.charAt(0)}
+                        {lansia.nama_lengkap.charAt(0).toUpperCase()}
                     </div>
                     <div>
                         <h2 className="text-lg font-bold text-slate-800">{lansia.nama_lengkap}</h2>
@@ -364,7 +364,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                     </div>
                     <div className="bg-slate-50 rounded-xl p-3">
                         <p className="text-[10px] text-slate-400 mb-0.5">Jenis Kelamin</p>
-                        <p className="font-semibold text-slate-700">{lansia.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
+                        <p className="font-semibold text-slate-700">{lansia.jenis_kelamin === 'L' ? 'LAKI-LAKI' : 'PEREMPUAN'}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-3">
                         <p className="text-[10px] text-slate-400 mb-0.5">TTL</p>
@@ -633,20 +633,20 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                 </button>
                             </div>
                             <form onSubmit={handleEditLansia} className="space-y-4">
-                                <Input label="Nama Lengkap" value={editFormData.nama_lengkap} onChange={(e) => setEditFormData(p => ({ ...p, nama_lengkap: e.target.value }))} required />
+                                <Input label="Nama Lengkap" value={editFormData.nama_lengkap} onChange={(e) => setEditFormData(p => ({ ...p, nama_lengkap: e.target.value.toUpperCase() }))} required />
                                 <div className="space-y-1.5">
                                     <label className="block text-sm font-medium text-slate-700">Jenis Kelamin</label>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'L' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'L' ? 'bg-emerald-50 border-emerald-300 text-emerald-700 font-bold' : 'bg-white border-slate-200')}>Laki-laki</button>
-                                        <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'P' }))} className={cn('py-2 rounded-xl border text-sm transition-all', editFormData.jenis_kelamin === 'P' ? 'bg-rose-50 border-rose-300 text-rose-700 font-bold' : 'bg-white border-slate-200')}>Perempuan</button>
+                                        <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'L' }))} className={cn('py-2 rounded-xl border text-[10px] font-bold transition-all uppercase tracking-wider', editFormData.jenis_kelamin === 'L' ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-400')}>♂ LAKI-LAKI</button>
+                                        <button type="button" onClick={() => setEditFormData(p => ({ ...p, jenis_kelamin: 'P' }))} className={cn('py-2 rounded-xl border text-[10px] font-bold transition-all uppercase tracking-wider', editFormData.jenis_kelamin === 'P' ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-slate-200 text-slate-400')}>♀ PEREMPUAN</button>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Input label="Tempat Lahir" value={editFormData.tempat_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tempat_lahir: e.target.value }))} required />
+                                    <Input label="Tempat Lahir" value={editFormData.tempat_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tempat_lahir: e.target.value.toUpperCase() }))} required />
                                     <Input label="Tanggal Lahir" type="date" value={editFormData.tanggal_lahir} onChange={(e) => setEditFormData(p => ({ ...p, tanggal_lahir: e.target.value }))} required />
                                 </div>
                                 <Input label="NIK (Opsional)" value={editFormData.nik} onChange={(e) => setEditFormData(p => ({ ...p, nik: e.target.value }))} />
-                                <Input label="Alamat" value={editFormData.alamat} onChange={(e) => setEditFormData(p => ({ ...p, alamat: e.target.value }))} required />
+                                <Input label="Alamat" value={editFormData.alamat} onChange={(e) => setEditFormData(p => ({ ...p, alamat: e.target.value.toUpperCase() }))} required />
                                 <div className="pt-2">
                                     <Button type="submit" className="w-full" isLoading={isSaving}>Simpan Perubahan</Button>
                                 </div>

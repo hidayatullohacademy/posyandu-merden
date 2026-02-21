@@ -9,7 +9,13 @@ import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
-created_at: string;
+interface BasicUser {
+    id: string;
+    nama_lengkap: string;
+    no_hp: string;
+    nik: string;
+    is_active: boolean;
+    created_at: string;
 }
 
 interface BalitaOption {
@@ -78,7 +84,10 @@ export default function KaderOrtuClient() {
     };
 
     const handleFormChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
+        // Auto capitalize for text fields (excluding nik, no_hp, rt, rw which are numeric in spirit or specific)
+        const capitalizedValue = (field === 'nama_lengkap') ? value.toUpperCase() : value;
+
+        setFormData((prev) => ({ ...prev, [field]: capitalizedValue }));
         if (formErrors[field]) setFormErrors((prev) => ({ ...prev, [field]: '' }));
     };
 

@@ -6,7 +6,7 @@ import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCi
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi, formatNumber, parseNumber, formatUsiaDetail } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi, formatNumber, parseNumber, formatUsiaDetail, isValidNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -151,8 +151,8 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const handleSubmitKunjungan = async (e: React.FormEvent) => {
         e.preventDefault();
         const errors: Record<string, string> = {};
-        if (!formData.berat_badan || parseNumber(formData.berat_badan) <= 0) errors.berat_badan = 'Berat badan wajib diisi';
-        if (!formData.tinggi_badan || parseNumber(formData.tinggi_badan) <= 0) errors.tinggi_badan = 'Tinggi badan wajib diisi';
+        if (!isValidNumber(formData.berat_badan) || parseNumber(formData.berat_badan) <= 0) errors.berat_badan = 'Berat badan tidak valid';
+        if (!isValidNumber(formData.tinggi_badan) || parseNumber(formData.tinggi_badan) <= 0) errors.tinggi_badan = 'Tinggi badan tidak valid';
         setFormErrors(errors);
         if (Object.keys(errors).length > 0) return;
 
@@ -206,8 +206,9 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 periode_kunjungan: localDate,
             });
             fetchData();
-        } catch {
-            toast.error('Gagal menyimpan kunjungan');
+        } catch (error: any) {
+            console.error('Error saving kunjungan:', error);
+            toast.error(`Gagal menyimpan: ${error.message || 'Error tidak diketahui'}`);
         } finally {
             setIsSaving(false);
         }
@@ -432,18 +433,18 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                             <div className="grid grid-cols-2 gap-3">
                                 <Input
                                     label="Berat Badan (kg)"
-                                    type="number"
-                                    step="0.1"
-                                    placeholder="0.0"
+                                    type="text"
+                                    inputMode="decimal"
+                                    placeholder="0,0"
                                     value={formData.berat_badan}
                                     onChange={(e) => setFormData(prev => ({ ...prev, berat_badan: e.target.value }))}
                                     error={formErrors.berat_badan}
                                 />
                                 <Input
                                     label="Tinggi Badan (cm)"
-                                    type="number"
-                                    step="0.1"
-                                    placeholder="0.0"
+                                    type="text"
+                                    inputMode="decimal"
+                                    placeholder="0,0"
                                     value={formData.tinggi_badan}
                                     onChange={(e) => setFormData(prev => ({ ...prev, tinggi_badan: e.target.value }))}
                                     error={formErrors.tinggi_badan}
@@ -453,16 +454,16 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                             <div className="grid grid-cols-2 gap-3">
                                 <Input
                                     label="Lingkar Kepala (cm)"
-                                    type="number"
-                                    step="0.1"
+                                    type="text"
+                                    inputMode="decimal"
                                     placeholder="Opsional"
                                     value={formData.lingkar_kepala}
                                     onChange={(e) => setFormData(prev => ({ ...prev, lingkar_kepala: e.target.value }))}
                                 />
                                 <Input
                                     label="LiLA (cm)"
-                                    type="number"
-                                    step="0.1"
+                                    type="text"
+                                    inputMode="decimal"
                                     placeholder="Opsional"
                                     value={formData.lingkar_lengan}
                                     onChange={(e) => setFormData(prev => ({ ...prev, lingkar_lengan: e.target.value }))}

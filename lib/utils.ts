@@ -265,5 +265,15 @@ export function formatNumber(value: number | string | null | undefined, decimals
  * @example parseNumber("36,2") → 36.2
  */
 export function parseNumber(value: string): number {
+    if (!value) return 0;
     return parseFloat(value.replace(',', '.'));
+}
+
+/**
+ * Cek apakah string input adalah angka yang valid (termasuk format Indonesia)
+ */
+export function isValidNumber(value: string): boolean {
+    if (!value) return false;
+    const num = parseNumber(value);
+    return !isNaN(num) && isFinite(num);
 }

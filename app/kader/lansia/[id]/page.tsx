@@ -6,7 +6,7 @@ import { ArrowLeft, Activity, Plus, X, Calendar, AlertTriangle, HeartPulse, Edit
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, formatDate, hitungUsiaTahun, hitungIMT, getStatusIMT, evaluateRisikoLansia, formatNumber, parseNumber, formatUsiaDetail } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaTahun, hitungIMT, getStatusIMT, evaluateRisikoLansia, formatNumber, parseNumber, formatUsiaDetail, isValidNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -144,8 +144,8 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
     const handleSubmitKunjungan = async (e: React.FormEvent) => {
         e.preventDefault();
         const errors: Record<string, string> = {};
-        if (!formData.berat_badan || parseNumber(formData.berat_badan) <= 0) errors.berat_badan = 'Wajib diisi';
-        if (!formData.tinggi_badan || parseNumber(formData.tinggi_badan) <= 0) errors.tinggi_badan = 'Wajib diisi';
+        if (!isValidNumber(formData.berat_badan) || parseNumber(formData.berat_badan) <= 0) errors.berat_badan = 'Wajib diisi';
+        if (!isValidNumber(formData.tinggi_badan) || parseNumber(formData.tinggi_badan) <= 0) errors.tinggi_badan = 'Wajib diisi';
         setFormErrors(errors);
         if (Object.keys(errors).length > 0) return;
 
@@ -212,8 +212,9 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 periode_kunjungan: now.toISOString().slice(0, 7),
             });
             fetchData();
-        } catch {
-            toast.error('Gagal menyimpan kunjungan');
+        } catch (error: any) {
+            console.error('Error saving kunjungan lansia:', error);
+            toast.error(`Gagal menyimpan: ${error.message || 'Error tidak diketahui'}`);
         } finally {
             setIsSaving(false);
         }
@@ -459,11 +460,11 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                         )}
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <Input label="Berat Badan (kg)" type="number" step="0.1" placeholder="0.0" value={formData.berat_badan} onChange={(e) => setFormData(prev => ({ ...prev, berat_badan: e.target.value }))} error={formErrors.berat_badan} />
-                                        <Input label="Tinggi Badan (cm)" type="number" step="0.1" placeholder="0.0" value={formData.tinggi_badan} onChange={(e) => setFormData(prev => ({ ...prev, tinggi_badan: e.target.value }))} error={formErrors.tinggi_badan} />
+                                        <Input label="Berat Badan (kg)" type="text" inputMode="decimal" placeholder="0,0" value={formData.berat_badan} onChange={(e) => setFormData(prev => ({ ...prev, berat_badan: e.target.value }))} error={formErrors.berat_badan} />
+                                        <Input label="Tinggi Badan (cm)" type="text" inputMode="decimal" placeholder="0,0" value={formData.tinggi_badan} onChange={(e) => setFormData(prev => ({ ...prev, tinggi_badan: e.target.value }))} error={formErrors.tinggi_badan} />
                                     </div>
                                     <div className="relative">
-                                        <Input label="Lingkar Perut (cm)" type="number" step="0.1" placeholder="Opsional" value={formData.lingkar_perut} onChange={(e) => setFormData(prev => ({ ...prev, lingkar_perut: e.target.value }))} />
+                                        <Input label="Lingkar Perut (cm)" type="text" inputMode="decimal" placeholder="Opsional" value={formData.lingkar_perut} onChange={(e) => setFormData(prev => ({ ...prev, lingkar_perut: e.target.value }))} />
                                         {currentRisk.flags.lingkarPerut && (
                                             <span className="absolute top-0 right-2 mt-[2px] text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                                                 {currentRisk.flags.lingkarPerut}
@@ -479,8 +480,8 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                         <div className="relative">
                                             <p className="text-xs font-semibold text-slate-700 mb-1.5">Tekanan Darah (mmHg)</p>
                                             <div className="grid grid-cols-2 gap-4">
-                                                <Input type="number" placeholder="Sistolik" value={formData.sistolik} onChange={(e) => setFormData(prev => ({ ...prev, sistolik: e.target.value }))} />
-                                                <Input type="number" placeholder="Diastolik" value={formData.diastolik} onChange={(e) => setFormData(prev => ({ ...prev, diastolik: e.target.value }))} />
+                                                <Input type="text" inputMode="decimal" placeholder="Sistolik" value={formData.sistolik} onChange={(e) => setFormData(prev => ({ ...prev, sistolik: e.target.value }))} />
+                                                <Input type="text" inputMode="decimal" placeholder="Diastolik" value={formData.diastolik} onChange={(e) => setFormData(prev => ({ ...prev, diastolik: e.target.value }))} />
                                             </div>
                                             {currentRisk.flags.tensi && (
                                                 <div className="mt-1 flex justify-end">
@@ -495,7 +496,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="relative">
-                                                <Input label="GDS (mg/dL)" type="number" step="0.1" placeholder="-" value={formData.gula_darah} onChange={(e) => setFormData(prev => ({ ...prev, gula_darah: e.target.value }))} />
+                                                <Input label="GDS (mg/dL)" type="text" inputMode="decimal" placeholder="-" value={formData.gula_darah} onChange={(e) => setFormData(prev => ({ ...prev, gula_darah: e.target.value }))} />
                                                 {currentRisk.flags.gulaDarah && (
                                                     <span className="absolute -top-1 -right-1 text-[8px] font-bold text-white bg-red-500 px-1.5 py-[1px] rounded flex items-center shadow-sm">
                                                         {currentRisk.flags.gulaDarah.includes('Kritis') || currentRisk.flags.gulaDarah.includes('Tinggi') ? '🔴' : '⚠️'}
@@ -503,7 +504,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                                 )}
                                             </div>
                                             <div className="relative">
-                                                <Input label="Kolesterol" type="number" step="0.1" placeholder="-" value={formData.kolesterol} onChange={(e) => setFormData(prev => ({ ...prev, kolesterol: e.target.value }))} />
+                                                <Input label="Kolesterol" type="text" inputMode="decimal" placeholder="-" value={formData.kolesterol} onChange={(e) => setFormData(prev => ({ ...prev, kolesterol: e.target.value }))} />
                                                 {currentRisk.flags.kolesterol && (
                                                     <span className="absolute -top-1 -right-1 text-[8px] font-bold text-white bg-red-500 px-1.5 py-[1px] rounded flex items-center shadow-sm">
                                                         {currentRisk.flags.kolesterol.includes('Kritis') ? '🔴' : '⚠️'}
@@ -511,7 +512,7 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                                                 )}
                                             </div>
                                             <div className="relative">
-                                                <Input label="Asam Urat" type="number" step="0.1" placeholder="-" value={formData.asam_urat} onChange={(e) => setFormData(prev => ({ ...prev, asam_urat: e.target.value }))} />
+                                                <Input label="Asam Urat" type="text" inputMode="decimal" placeholder="-" value={formData.asam_urat} onChange={(e) => setFormData(prev => ({ ...prev, asam_urat: e.target.value }))} />
                                                 {currentRisk.flags.asamUrat && (
                                                     <span className="absolute -top-1 -right-1 text-[8px] font-bold text-white bg-amber-500 px-1.5 py-[1px] rounded flex items-center shadow-sm">⚠️</span>
                                                 )}

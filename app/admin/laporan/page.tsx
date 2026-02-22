@@ -15,6 +15,11 @@ const BULAN_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
     label: namaBulan(i + 1),
 }));
 
+interface PosyanduItem {
+    id: string;
+    nama: string;
+}
+
 export default function AdminLaporanPage() {
     const now = new Date();
     const [periode, setPeriode] = useState(now.toISOString().slice(0, 7));
@@ -28,17 +33,31 @@ export default function AdminLaporanPage() {
         kunjunganBalita: 0,
         kunjunganLansia: 0,
     });
+    const [posyanduList, setPosyanduList] = useState<PosyanduItem[]>([]);
+    const [selectedPosyanduId, setSelectedPosyanduId] = useState<string>('ALL');
     const [isLoadingStats, setIsLoadingStats] = useState(false);
     const supabase = createClient();
 
     const loadStats = async () => {
         setIsLoadingStats(true);
         try {
+            let balitaQuery = supabase.from('balita').select('id', { count: 'exact', head: true }).eq('is_active', true);
+            let lansiaQuery = supabase.from('lansia').select('id', { count: 'exact', head: true }).eq('is_active', true);
+            let kbQuery = supabase.from('kunjungan_balita').select('id', { count: 'exact', head: true }).eq('bulan', bulan).eq('tahun', tahun);
+            let klQuery = supabase.from('kunjungan_lansia').select('id', { count: 'exact', head: true }).eq('bulan', bulan).eq('tahun', tahun);
+
+            if (selectedPosyanduId !== 'ALL') {
+                balitaQuery = balitaQuery.eq('posyandu_id', selectedPosyanduId);
+                lansiaQuery = lansiaQuery.eq('posyandu_id', selectedPosyanduId);
+                kbQuery = kbQuery.eq('posyandu_id', selectedPosyanduId);
+                klQuery = klQuery.eq('posyandu_id', selectedPosyanduId);
+            }
+
             const [balitaRes, lansiaRes, kbRes, klRes] = await Promise.all([
-                supabase.from('balita').select('id', { count: 'exact', head: true }).eq('is_active', true),
-                supabase.from('lansia').select('id', { count: 'exact', head: true }).eq('is_active', true),
-                supabase.from('kunjungan_balita').select('id', { count: 'exact', head: true }).eq('bulan', bulan).eq('tahun', tahun),
-                supabase.from('kunjungan_lansia').select('id', { count: 'exact', head: true }).eq('bulan', bulan).eq('tahun', tahun),
+                balitaQuery,
+                lansiaQuery,
+                kbQuery,
+                klQuery,
             ]);
 
             setStats({
@@ -54,11 +73,24 @@ export default function AdminLaporanPage() {
         }
     };
 
-    // Auto load stats when month/year changes
+    const fetchPosyandu = async () => {
+        try {
+            const { data } = await supabase.from('posyandu').select('id, nama').eq('is_active', true).order('nama');
+            if (data) setPosyanduList(data);
+        } catch (error) {
+            console.error('Error fetching posyandu:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchPosyandu();
+    }, []);
+
+    // Auto load stats when month/year/posyandu changes
     useEffect(() => {
         loadStats();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [periode]);
+    }, [periode, selectedPosyanduId]);
 
     const handleExport = async () => {
         setIsGenerating(true);
@@ -70,12 +102,17 @@ export default function AdminLaporanPage() {
             let filename = '';
 
             if (reportType === 'balita') {
-                const { data: kunjunganData, error } = await supabase
+                let query = supabase
                     .from('kunjungan_balita')
                     .select('*, balita:balita_id(nama, nama_ibu, jenis_kelamin, tanggal_lahir)')
                     .eq('bulan', bulan)
-                    .eq('tahun', tahun)
-                    .order('created_at');
+                    .eq('tahun', tahun);
+
+                if (selectedPosyanduId !== 'ALL') {
+                    query = query.eq('posyandu_id', selectedPosyanduId);
+                }
+
+                const { data: kunjunganData, error } = await query.order('created_at');
 
                 if (error) throw error;
 
@@ -97,12 +134,17 @@ export default function AdminLaporanPage() {
 
                 filename = `Laporan_Balita_${namaBulan(bulan)}_${tahun}.xlsx`;
             } else if (reportType === 'lansia') {
-                const { data: kunjunganData, error } = await supabase
+                let query = supabase
                     .from('kunjungan_lansia')
                     .select('*, lansia:lansia_id(nama_lengkap, jenis_kelamin, tanggal_lahir, alamat)')
                     .eq('bulan', bulan)
-                    .eq('tahun', tahun)
-                    .order('created_at');
+                    .eq('tahun', tahun);
+
+                if (selectedPosyanduId !== 'ALL') {
+                    query = query.eq('posyandu_id', selectedPosyanduId);
+                }
+
+                const { data: kunjunganData, error } = await query.order('created_at');
 
                 if (error) throw error;
 
@@ -339,6 +381,22 @@ export default function AdminLaporanPage() {
                                             className="w-full bg-slate-50 border-none text-sm font-bold text-slate-800 focus:ring-0 cursor-pointer px-2 py-1.5"
                                             required
                                         />
+                                    </div>
+                                </div>
+
+                                <div className="pt-1">
+                                    <div className="space-y-1.5 border border-slate-200 p-1.5 rounded-xl bg-slate-50">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 pt-1">Filter Posyandu</label>
+                                        <select
+                                            value={selectedPosyanduId}
+                                            onChange={(e) => setSelectedPosyanduId(e.target.value)}
+                                            className="w-full bg-slate-50 border-none text-sm font-bold text-slate-800 focus:ring-0 cursor-pointer px-2 py-1.5"
+                                        >
+                                            <option value="ALL">Semua Posyandu</option>
+                                            {posyanduList.map((p) => (
+                                                <option key={p.id} value={p.id}>{p.nama}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
 

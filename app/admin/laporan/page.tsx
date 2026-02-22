@@ -123,8 +123,13 @@ export default function AdminLaporanPage() {
 
     const fetchPosyandu = async () => {
         try {
-            const { data } = await supabase.from('posyandu').select('id, nama').eq('is_active', true).order('nama');
-            if (data) setPosyanduList(data);
+            const { data } = await supabase.from('posyandu').select('id, nama').eq('is_active', true);
+            if (data) {
+                const sortedData = [...data].sort((a, b) =>
+                    a.nama.localeCompare(b.nama, undefined, { numeric: true, sensitivity: 'base' })
+                );
+                setPosyanduList(sortedData);
+            }
         } catch (error) {
             console.error('Error fetching posyandu:', error);
         }

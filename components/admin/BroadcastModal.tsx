@@ -40,8 +40,13 @@ export default function BroadcastModal({ isOpen, onClose }: BroadcastModalProps)
     }, [isOpen]);
 
     const fetchPosyandu = async () => {
-        const { data } = await supabase.from('posyandu').select('id, nama, hari_buka, jam_buka').eq('is_active', true).order('nama');
-        if (data) setPosyanduList(data);
+        const { data } = await supabase.from('posyandu').select('id, nama, hari_buka, jam_buka').eq('is_active', true);
+        if (data) {
+            const sortedData = [...data].sort((a, b) =>
+                a.nama.localeCompare(b.nama, undefined, { numeric: true, sensitivity: 'base' })
+            );
+            setPosyanduList(sortedData);
+        }
     };
 
     const fetchRecipients = async (posyanduId: string) => {

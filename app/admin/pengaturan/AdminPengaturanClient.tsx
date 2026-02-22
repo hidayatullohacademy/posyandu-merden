@@ -52,11 +52,13 @@ export default function AdminPengaturanPage() {
         try {
             const { data, error } = await supabase
                 .from('posyandu')
-                .select('*')
-                .order('nama', { ascending: true });
+                .select('*');
 
             if (error) throw error;
-            setPosyanduList(data || []);
+            const sortedData = (data || []).sort((a: any, b: any) =>
+                a.nama.localeCompare(b.nama, undefined, { numeric: true, sensitivity: 'base' })
+            );
+            setPosyanduList(sortedData);
         } catch {
             toast.error('Gagal memuat data posyandu');
         } finally {

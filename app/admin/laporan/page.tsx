@@ -20,6 +20,12 @@ interface PosyanduItem {
     nama: string;
 }
 
+interface TrendItem {
+    month: string;
+    balita: number;
+    lansia: number;
+}
+
 export default function AdminLaporanPage() {
     const now = new Date();
     const [periode, setPeriode] = useState(now.toISOString().slice(0, 7));
@@ -36,6 +42,8 @@ export default function AdminLaporanPage() {
     const [posyanduList, setPosyanduList] = useState<PosyanduItem[]>([]);
     const [selectedPosyanduId, setSelectedPosyanduId] = useState<string>('ALL');
     const [isLoadingStats, setIsLoadingStats] = useState(false);
+    const [trendData, setTrendData] = useState<TrendItem[]>([]);
+    const [isLoadingTrend, setIsLoadingTrend] = useState(false);
     const supabase = createClient();
 
     const loadStats = async () => {
@@ -73,6 +81,46 @@ export default function AdminLaporanPage() {
         }
     };
 
+    const loadTrendData = async () => {
+        setIsLoadingTrend(true);
+        try {
+            const months = [];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(1); // Avoid month skipping
+                d.setMonth(d.getMonth() - i);
+                months.push({
+                    bulan: d.getMonth() + 1,
+                    tahun: d.getFullYear(),
+                    label: namaBulan(d.getMonth() + 1).slice(0, 3)
+                });
+            }
+
+            const trendResults = await Promise.all(months.map(async (m) => {
+                let kbQuery = supabase.from('kunjungan_balita').select('id', { count: 'exact', head: true }).eq('bulan', m.bulan).eq('tahun', m.tahun);
+                let klQuery = supabase.from('kunjungan_lansia').select('id', { count: 'exact', head: true }).eq('bulan', m.bulan).eq('tahun', m.tahun);
+
+                if (selectedPosyanduId !== 'ALL') {
+                    kbQuery = kbQuery.eq('posyandu_id', selectedPosyanduId);
+                    klQuery = klQuery.eq('posyandu_id', selectedPosyanduId);
+                }
+
+                const [kbRes, klRes] = await Promise.all([kbQuery, klQuery]);
+                return {
+                    month: m.label,
+                    balita: kbRes.count || 0,
+                    lansia: klRes.count || 0
+                };
+            }));
+
+            setTrendData(trendResults);
+        } catch (error) {
+            console.error('Error loading trend data:', error);
+        } finally {
+            setIsLoadingTrend(false);
+        }
+    };
+
     const fetchPosyandu = async () => {
         try {
             const { data } = await supabase.from('posyandu').select('id, nama').eq('is_active', true).order('nama');
@@ -89,6 +137,7 @@ export default function AdminLaporanPage() {
     // Auto load stats when month/year/posyandu changes
     useEffect(() => {
         loadStats();
+        loadTrendData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [periode, selectedPosyanduId]);
 
@@ -309,6 +358,69 @@ export default function AdminLaporanPage() {
                                 Insight: Tingkat partisipasi dapat ditingkatkan. Pertimbangkan untuk mengirim pengingat WhatsApp secara bulk H-1 sebelum jadwal Posyandu bulan depan.
                             </p>
                         </div>
+                    </Card>
+
+                    {/* Trend Analytics Card */}
+                    <Card className="p-6 border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+                            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                                <TrendingUp className="h-4 w-4 text-teal-500" /> Tren Kunjungan (6 Bulan Terakhir)
+                            </h2>
+                        </div>
+
+                        {isLoadingTrend ? (
+                            <div className="h-64 flex items-center justify-center bg-slate-50 rounded-xl animate-pulse">
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Memuat Grafik...</p>
+                            </div>
+                        ) : (
+                            <div className="relative pt-10 pb-4">
+                                {/* Chart Area */}
+                                <div className="flex items-end justify-between h-48 gap-2 px-2">
+                                    {trendData.map((item, idx) => {
+                                        const maxVal = Math.max(...trendData.map(d => Math.max(d.balita, d.lansia, 1)));
+                                        const balitaHeight = (item.balita / maxVal) * 100;
+                                        const lansiaHeight = (item.lansia / maxVal) * 100;
+
+                                        return (
+                                            <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
+                                                {/* Tooltip on hover */}
+                                                <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] p-2 rounded-lg z-20 whitespace-nowrap shadow-xl pointer-events-none">
+                                                    <p className="font-bold border-b border-white/20 mb-1 pb-1">{item.month}</p>
+                                                    <p className="flex justify-between gap-4">Balita: <span>{item.balita}</span></p>
+                                                    <p className="flex justify-between gap-4">Lansia: <span>{item.lansia}</span></p>
+                                                </div>
+
+                                                <div className="w-full flex justify-center items-end gap-1 h-full">
+                                                    {/* Balita Bar */}
+                                                    <div
+                                                        className="w-3 sm:w-5 bg-gradient-to-t from-blue-500 to-blue-300 rounded-t-sm transition-all duration-700 ease-out delay-75 hover:from-blue-600 hover:to-blue-400 cursor-pointer"
+                                                        style={{ height: `${balitaHeight}%` }}
+                                                    />
+                                                    {/* Lansia Bar */}
+                                                    <div
+                                                        className="w-3 sm:w-5 bg-gradient-to-t from-rose-500 to-rose-300 rounded-t-sm transition-all duration-700 ease-out delay-150 hover:from-rose-600 hover:to-rose-400 cursor-pointer"
+                                                        style={{ height: `${lansiaHeight}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter sm:tracking-normal">{item.month}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Legend */}
+                                <div className="mt-8 flex justify-center gap-6 border-t border-slate-50 pt-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-blue-500 rounded-sm" />
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kunjungan Balita</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-rose-500 rounded-sm" />
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kunjungan Lansia</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </Card>
                 </div>
 

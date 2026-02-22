@@ -40,12 +40,12 @@ export default function KaderDashboard() {
                 if (user) {
                     const { data: userData } = await supabase
                         .from('users')
-                        .select('nama, posyandu_id')
+                        .select('nama_lengkap, posyandu_id')
                         .eq('id', user.id)
                         .single();
 
                     if (userData) {
-                        setUserName(userData.nama);
+                        setUserName(userData.nama_lengkap);
 
                         // 2. Fetch stats based on posyandu_id
                         const [balitaRes, lansiaRes] = await Promise.all([

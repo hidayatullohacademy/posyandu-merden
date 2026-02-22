@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
-import { Users, Plus, Search, X, Shield, UserCheck, Edit, UploadCloud } from 'lucide-react';
+import { Users, Plus, Search, X, Shield, UserCheck, Edit, UploadCloud, Download, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -62,6 +62,10 @@ export default function AdminPenggunaClient() {
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<UserRole | 'ALL'>('ALL');
     const [isLoading, setIsLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState<'ALL' | 'AKTIF' | 'NONAKTIF'>('ALL');
+    const [sortConfig, setSortConfig] = useState<{ key: keyof UserItem | 'posyandu'; direction: 'asc' | 'desc' }>({ key: 'nama_lengkap', direction: 'asc' });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
     const [showForm, setShowForm] = useState(false);
     const [editingUser, setEditingUser] = useState<UserItem | null>(null);
     const [showImport, setShowImport] = useState(false);
@@ -83,9 +87,12 @@ export default function AdminPenggunaClient() {
     useEffect(() => { fetchData(); }, []);
 
     useEffect(() => {
-        let result = users;
+        let result = [...users];
         if (roleFilter !== 'ALL') {
             result = result.filter((u) => u.role === roleFilter);
+        }
+        if (statusFilter !== 'ALL') {
+            result = result.filter((u) => u.status === statusFilter);
         }
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
@@ -96,8 +103,29 @@ export default function AdminPenggunaClient() {
                     u.nik.toLowerCase().includes(q)
             );
         }
+
+        // Sorting
+        result.sort((a, b) => {
+            let valA: any = a[sortConfig.key as keyof UserItem];
+            let valB: any = b[sortConfig.key as keyof UserItem];
+
+            if (sortConfig.key === 'posyandu') {
+                valA = a.posyandu?.nama || '';
+                valB = b.posyandu?.nama || '';
+            }
+
+            // Handle null/undefined
+            valA = valA || '';
+            valB = valB || '';
+
+            if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+
         setFilteredUsers(result);
-    }, [searchQuery, roleFilter, users]);
+        setCurrentPage(1);
+    }, [searchQuery, roleFilter, statusFilter, sortConfig, users]);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -338,12 +366,70 @@ export default function AdminPenggunaClient() {
         }
     };
 
+    const exportToExcel = () => {
+        if (filteredUsers.length === 0) {
+            toast.error('Tidak ada data untuk diekspor');
+            return;
+        }
+
+        const dataToExport = filteredUsers.map(user => ({
+            'Nama Lengkap': user.nama_lengkap,
+            'No HP': user.no_hp,
+            'NIK': user.nik || '-',
+            'Role': ROLE_LABELS[user.role],
+            'Posyandu': user.posyandu?.nama || '-',
+            'Status': user.status === 'AKTIF' ? 'Aktif' : 'Nonaktif',
+            'Terdaftar Pada': new Date(user.created_at).toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })
+        }));
+
+        const worksheet = xlsx.utils.json_to_sheet(dataToExport);
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Daftar Pengguna');
+
+        // Set column widths
+        const wscols = [
+            { wch: 30 }, // Nama Lengkap
+            { wch: 15 }, // No HP
+            { wch: 20 }, // NIK
+            { wch: 15 }, // Role
+            { wch: 20 }, // Posyandu
+            { wch: 12 }, // Status
+            { wch: 20 }  // Terdaftar Pada
+        ];
+        worksheet['!cols'] = wscols;
+
+        xlsx.writeFile(workbook, `Daftar_Pengguna_${new Date().toISOString().split('T')[0]}.xlsx`);
+        toast.success('File Excel berhasil diunduh');
+    };
+
     const roleCounts = {
         ALL: users.length,
         ADMIN: users.filter((u) => u.role === 'ADMIN').length,
         KADER: users.filter((u) => u.role === 'KADER').length,
         ORANG_TUA: users.filter((u) => u.role === 'ORANG_TUA').length,
     };
+
+    const handleSort = (key: keyof UserItem | 'posyandu') => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+
+    const SortIcon = ({ column }: { column: keyof UserItem | 'posyandu' }) => {
+        if (sortConfig.key !== column) return <ChevronUp className="h-3 w-3 opacity-20" />;
+        return sortConfig.direction === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
+    };
+
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    const paginatedUsers = filteredUsers.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -353,6 +439,9 @@ export default function AdminPenggunaClient() {
                     <p className="text-sm text-slate-400 mt-1">{users.length} pengguna terdaftar</p>
                 </div>
                 <div className="flex gap-2">
+                    <Button variant="outline" onClick={exportToExcel} className="hidden sm:flex">
+                        <Download className="h-4 w-4" /> Export Excel
+                    </Button>
                     <Button variant="outline" onClick={() => setShowImport(true)}>
                         <UploadCloud className="h-4 w-4" /> Import CSV/Excel
                     </Button>
@@ -362,22 +451,43 @@ export default function AdminPenggunaClient() {
                 </div>
             </div>
 
-            {/* Role Filter Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-                {(['ALL', 'ADMIN', 'KADER', 'ORANG_TUA'] as const).map((role) => (
-                    <button
-                        key={role}
-                        onClick={() => setRoleFilter(role)}
-                        className={cn(
-                            'px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap',
-                            roleFilter === role
-                                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-teal-500/25'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-                        )}
-                    >
-                        {role === 'ALL' ? 'Semua' : ROLE_LABELS[role]} ({roleCounts[role]})
-                    </button>
-                ))}
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+                {/* Role Filter Tabs */}
+                <div className="flex gap-2 overflow-x-auto pb-1 flex-1">
+                    {(['ALL', 'ADMIN', 'KADER', 'ORANG_TUA'] as const).map((role) => (
+                        <button
+                            key={role}
+                            onClick={() => setRoleFilter(role)}
+                            className={cn(
+                                'px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap',
+                                roleFilter === role
+                                    ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-teal-500/25'
+                                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                            )}
+                        >
+                            {role === 'ALL' ? 'Semua' : ROLE_LABELS[role]} {role === 'ALL' && `(${users.length})`}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Status Filter */}
+                <div className="flex bg-white rounded-xl border border-slate-200 p-1 self-start">
+                    {(['ALL', 'AKTIF', 'NONAKTIF'] as const).map((status) => (
+                        <button
+                            key={status}
+                            onClick={() => setStatusFilter(status)}
+                            className={cn(
+                                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                                statusFilter === status
+                                    ? 'bg-slate-100 text-slate-900'
+                                    : 'text-slate-500 hover:text-slate-700'
+                            )}
+                        >
+                            {status === 'ALL' ? 'Semua Status' : status.charAt(0) + status.slice(1).toLowerCase()}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Search */}
@@ -418,16 +528,36 @@ export default function AdminPenggunaClient() {
                         <table className="w-full text-sm">
                             <thead className="bg-slate-800 text-white">
                                 <tr>
-                                    <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider">Nama</th>
-                                    <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider">No HP</th>
-                                    <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider">Role</th>
-                                    <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider">Posyandu</th>
-                                    <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider">Status</th>
+                                    <th className="group cursor-pointer text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" onClick={() => handleSort('nama_lengkap')}>
+                                        <div className="flex items-center gap-1">
+                                            Nama <SortIcon column="nama_lengkap" />
+                                        </div>
+                                    </th>
+                                    <th className="group cursor-pointer text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" onClick={() => handleSort('no_hp')}>
+                                        <div className="flex items-center gap-1">
+                                            No HP <SortIcon column="no_hp" />
+                                        </div>
+                                    </th>
+                                    <th className="group cursor-pointer text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" onClick={() => handleSort('role')}>
+                                        <div className="flex items-center gap-1">
+                                            Role <SortIcon column="role" />
+                                        </div>
+                                    </th>
+                                    <th className="group cursor-pointer text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" onClick={() => handleSort('posyandu')}>
+                                        <div className="flex items-center gap-1">
+                                            Posyandu <SortIcon column="posyandu" />
+                                        </div>
+                                    </th>
+                                    <th className="group cursor-pointer text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" onClick={() => handleSort('status')}>
+                                        <div className="flex items-center gap-1">
+                                            Status <SortIcon column="status" />
+                                        </div>
+                                    </th>
                                     <th className="text-center px-5 py-3 font-semibold text-xs uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredUsers.map((user, idx) => (
+                                {paginatedUsers.map((user, idx) => (
                                     <tr key={user.id} className={cn('border-b border-slate-50 hover:bg-slate-50 transition-colors', idx % 2 === 1 && 'bg-slate-50/50')}>
                                         <td className="px-5 py-3">
                                             <div className="flex items-center gap-3">
@@ -474,6 +604,63 @@ export default function AdminPenggunaClient() {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                            <p className="text-xs text-slate-500">
+                                Menampilkan <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> sampai <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredUsers.length)}</span> dari <span className="font-medium">{filteredUsers.length}</span> pengguna
+                            </p>
+                            <div className="flex gap-1">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50 hover:bg-slate-50 transition-colors"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </button>
+
+                                {[...Array(totalPages)].map((_, i) => {
+                                    const page = i + 1;
+                                    // Show first, last, current, and pages around current
+                                    if (
+                                        page === 1 ||
+                                        page === totalPages ||
+                                        (page >= currentPage - 1 && page <= currentPage + 1)
+                                    ) {
+                                        return (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={cn(
+                                                    'w-8 h-8 rounded-lg text-xs font-medium transition-all',
+                                                    currentPage === page
+                                                        ? 'bg-teal-600 text-white shadow-md'
+                                                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                )}
+                                            >
+                                                {page}
+                                            </button>
+                                        );
+                                    } else if (
+                                        page === currentPage - 2 ||
+                                        page === currentPage + 2
+                                    ) {
+                                        return <span key={page} className="w-8 h-8 flex items-center justify-center text-slate-400">...</span>;
+                                    }
+                                    return null;
+                                })}
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50 hover:bg-slate-50 transition-colors"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </Card>
             )}
 

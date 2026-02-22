@@ -17,7 +17,7 @@ interface ImunisasiBalitaRecord {
     status: 'BELUM' | 'SELESAI';
     catatan: string | null;
     balita?: { nama: string; jenis_kelamin: string };
-    master_imunisasi?: { nama_vaksin: string; toleransi_minggu: number; is_wajib: boolean };
+    master_imunisasi?: { nama: string; toleransi_minggu: number };
 }
 
 export default function KaderImunisasiPage() {
@@ -45,7 +45,7 @@ export default function KaderImunisasiPage() {
                 .select(`
                     *,
                     balita:balita_id(nama, jenis_kelamin),
-                    master_imunisasi:master_imun_id(nama_vaksin, toleransi_minggu, is_wajib)
+                    master_imunisasi:master_imun_id(nama, toleransi_minggu)
                 `)
                 .order('tanggal_jadwal', { ascending: true })
                 .limit(100);
@@ -152,11 +152,6 @@ export default function KaderImunisasiPage() {
 
                         return (
                             <Card key={r.id} className="p-4 overflow-hidden relative">
-                                {r.master_imunisasi?.is_wajib && (
-                                    <div className="absolute top-0 right-0 bg-teal-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">
-                                        WAJIB
-                                    </div>
-                                )}
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="flex items-start gap-4">
                                         <div className={cn(
@@ -169,7 +164,7 @@ export default function KaderImunisasiPage() {
                                             <p className="text-sm font-bold text-slate-800">{r.balita?.nama}</p>
                                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                                                 <span className="text-xs font-semibold text-slate-700">
-                                                    Vaksin {r.master_imunisasi?.nama_vaksin}
+                                                    Vaksin {r.master_imunisasi?.nama}
                                                 </span>
                                                 <span className="text-slate-300">•</span>
                                                 <span className="text-[11px] text-slate-500">
@@ -209,7 +204,7 @@ export default function KaderImunisasiPage() {
                         <div className="flex items-center justify-between mb-5">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-800">Tandai Imunisasi Selesai</h2>
-                                <p className="text-xs text-slate-500 mt-0.5">{selectedRecord.balita?.nama} - {selectedRecord.master_imunisasi?.nama_vaksin}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{selectedRecord.balita?.nama} - {selectedRecord.master_imunisasi?.nama}</p>
                             </div>
                             <button onClick={() => setShowForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="h-5 w-5 text-slate-400" /></button>
                         </div>

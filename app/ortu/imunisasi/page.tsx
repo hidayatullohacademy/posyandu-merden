@@ -9,9 +9,8 @@ import toast from 'react-hot-toast';
 
 interface ImunisasiMaster {
     id: string;
-    nama_vaksin: string;
-    usia_pemberian_bulan: number;
-    is_wajib: boolean;
+    nama: string;
+    usia_bulan: number;
 }
 
 interface ChildImunisasi {
@@ -44,7 +43,7 @@ export default function OrtuImunisasiPage() {
             const balitaIds = links.map((l: any) => l.balita_id);
 
             const [masterRes, balitaRes, recordsRes] = await Promise.all([
-                supabase.from('master_imunisasi').select('*').order('usia_pemberian_bulan'),
+                supabase.from('master_imunisasi').select('*').order('usia_bulan'),
                 supabase.from('balita').select('id, nama, tanggal_lahir').in('id', balitaIds),
                 supabase.from('imunisasi_balita').select('balita_id, master_imun_id, tanggal_realisasi, status').in('balita_id', balitaIds).eq('status', 'SELESAI'),
             ]);
@@ -94,7 +93,7 @@ export default function OrtuImunisasiPage() {
                 childrenData.map(child => {
                     const usia = hitungUsiaBulan(child.tanggalLahir);
                     const completed = child.records.length;
-                    const total = masterList.filter(v => v.is_wajib).length;
+                    const total = masterList.length;
                     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
                     return (
@@ -106,7 +105,7 @@ export default function OrtuImunisasiPage() {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-lg font-bold text-teal-600">{pct}%</p>
-                                    <p className="text-[10px] text-slate-400">{completed}/{total} wajib</p>
+                                    <p className="text-[10px] text-slate-400">{completed}/{total} vaksin</p>
                                 </div>
                             </div>
 
@@ -134,12 +133,11 @@ export default function OrtuImunisasiPage() {
                                                     {isDone ? <Check className="h-3 w-3 text-white" /> : <X className="h-3 w-3 text-slate-400" />}
                                                 </div>
                                                 <span className={cn('font-medium', isDone ? 'text-green-700' : 'text-slate-500')}>
-                                                    {v.nama_vaksin}
+                                                    {v.nama}
                                                 </span>
-                                                {v.is_wajib && <span className="text-[8px] bg-teal-100 text-teal-600 px-1 py-0.5 rounded">WAJIB</span>}
                                             </div>
                                             <span className="text-slate-400">
-                                                {isDone && record.tanggal_realisasi ? formatDate(record.tanggal_realisasi) : `usia ${v.usia_pemberian_bulan} bln`}
+                                                {isDone && record.tanggal_realisasi ? formatDate(record.tanggal_realisasi) : `usia ${v.usia_bulan} bln`}
                                             </span>
                                         </div>
                                     );

@@ -11,7 +11,9 @@ import {
     CheckCircle2,
     Download,
     Clock,
+    MessageSquare,
 } from 'lucide-react';
+import BroadcastModal from '@/components/admin/BroadcastModal';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,7 @@ export default function AdminDashboard() {
         totalKader: 0,
         totalKunjungan: 0
     });
+    const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
     const [healthAlerts, setHealthAlerts] = useState<{
         id: string;
         name: string;
@@ -348,9 +351,33 @@ export default function AdminDashboard() {
                             </Link>
                         </div>
                     </Card>
+
+                    <Card className="p-5 border-slate-200 shadow-sm bg-teal-50/30 border-dashed border-2 border-teal-200">
+                        <div className="text-center py-2">
+                            <div className="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                                <MessageSquare className="h-5 w-5" />
+                            </div>
+                            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Broadcast Pengingat</h3>
+                            <p className="text-[10px] text-slate-500 font-medium mb-4 leading-relaxed">
+                                Kirim pengingat jadwal posyandu ke seluruh orang tua melalui WhatsApp.
+                            </p>
+                            <Button
+                                onClick={() => setIsBroadcastOpen(true)}
+                                className="w-full bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-black tracking-widest h-10 rounded-xl"
+                            >
+                                MULAI BROADCAST
+                            </Button>
+                        </div>
+                    </Card>
                 </div>
 
             </div>
+
+            {/* Modals */}
+            <BroadcastModal
+                isOpen={isBroadcastOpen}
+                onClose={() => setIsBroadcastOpen(false)}
+            />
         </div>
     );
 }

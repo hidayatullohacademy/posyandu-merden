@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 
@@ -24,6 +25,20 @@ export default function AdminDashboard() {
         totalKader: 0,
         totalKunjungan: 0
     });
+    const [healthAlerts, setHealthAlerts] = useState<{
+        id: string;
+        name: string;
+        type: 'BALITA' | 'LANSIA';
+        issue: string;
+        date: string;
+    }[]>([]);
+    const [activities, setActivities] = useState<{
+        id: string;
+        type: 'KUNJUNGAN_BALITA' | 'KUNJUNGAN_LANSIA';
+        name: string;
+        description: string;
+        time: string;
+    }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const supabase = createClient();
 
@@ -45,6 +60,76 @@ export default function AdminDashboard() {
                     totalKader: kaderCount.count || 0,
                     totalKunjungan: (kunjunganBalitaCount.count || 0) + (kunjunganLansiaCount.count || 0)
                 });
+
+                // Fetch Health Alerts (Balita - Gizi)
+                const { data: balitaAlerts } = await supabase
+                    .from('kunjungan_balita')
+                    .select('id, created_at, status_gizi, balita:balita_id(nama)')
+                    .in('status_gizi', ['KURANG', 'BURUK'])
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                // Fetch Health Alerts (Lansia - Tensi/Gula/Rujukan)
+                const { data: lansiaAlerts } = await supabase
+                    .from('kunjungan_lansia')
+                    .select('id, created_at, sistolik, diastolik, gula_darah, perlu_rujukan, lansia:lansia_id(nama_lengkap)')
+                    .or('sistolik.gte.140,diastolik.gte.90,gula_darah.gte.200,perlu_rujukan.eq.true')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                const alerts: any[] = [];
+                balitaAlerts?.forEach((a: any) => {
+                    alerts.push({
+                        id: a.id,
+                        name: a.balita?.nama || 'Anonim',
+                        type: 'BALITA',
+                        issue: `Gizi ${a.status_gizi?.toLowerCase()}`,
+                        date: new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+                    });
+                });
+                lansiaAlerts?.forEach((a: any) => {
+                    let issues = [];
+                    if (a.sistolik >= 140 || a.diastolik >= 90) issues.push('Hipertensi');
+                    if (a.gula_darah >= 200) issues.push('Gula Darah Tinggi');
+                    if (a.perlu_rujukan) issues.push('Perlu Rujukan');
+
+                    alerts.push({
+                        id: a.id,
+                        name: a.lansia?.nama_lengkap || 'Anonim',
+                        type: 'LANSIA',
+                        issue: issues.join(', ') || 'Kondisi Risiko',
+                        date: new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+                    });
+                });
+                setHealthAlerts(alerts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5));
+
+                // Fetch Recent Activities
+                const [recentKB, recentKL] = await Promise.all([
+                    supabase.from('kunjungan_balita').select('id, created_at, balita:balita_id(nama)').order('created_at', { ascending: false }).limit(3),
+                    supabase.from('kunjungan_lansia').select('id, created_at, lansia:lansia_id(nama_lengkap)').order('created_at', { ascending: false }).limit(3)
+                ]);
+
+                const combinedActivities: any[] = [];
+                recentKB.data?.forEach((r: any) => {
+                    combinedActivities.push({
+                        id: r.id,
+                        type: 'KUNJUNGAN_BALITA',
+                        name: r.balita?.nama,
+                        description: 'Pemeriksaan Balita',
+                        time: r.created_at
+                    });
+                });
+                recentKL.data?.forEach((r: any) => {
+                    combinedActivities.push({
+                        id: r.id,
+                        type: 'KUNJUNGAN_LANSIA',
+                        name: r.lansia?.nama_lengkap,
+                        description: 'Pemeriksaan Lansia',
+                        time: r.created_at
+                    });
+                });
+                setActivities(combinedActivities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5));
+
             } catch (error) {
                 console.error('Error fetching dashboard stats:', error);
             } finally {
@@ -166,9 +251,36 @@ export default function AdminDashboard() {
                             <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full">Sistem Monitoring</span>
                         </div>
 
-                        <div className="p-12 text-center bg-white">
-                            <CheckCircle2 className="h-10 w-10 text-teal-100 mx-auto mb-3" />
-                            <p className="text-sm text-slate-400 font-medium">Semua data kesehatan dalam batas normal atau belum ada rujukan masuk.</p>
+                        <div className="bg-white">
+                            {healthAlerts.length > 0 ? (
+                                <div className="divide-y divide-slate-50">
+                                    {healthAlerts.map((alert) => (
+                                        <div key={alert.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className={cn(
+                                                    "w-2 h-2 rounded-full",
+                                                    alert.type === 'BALITA' ? "bg-amber-500" : "bg-rose-500"
+                                                )} />
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-800">{alert.name}</p>
+                                                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-tight">
+                                                        {alert.type} • <span className="text-rose-600">{alert.issue}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-bold text-slate-400">{alert.date}</p>
+                                                <Link href={alert.type === 'BALITA' ? `/admin/balita` : `/admin/lansia`} className="text-[10px] font-bold text-teal-600 hover:underline">Detail</Link>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-12 text-center">
+                                    <CheckCircle2 className="h-10 w-10 text-teal-100 mx-auto mb-3" />
+                                    <p className="text-sm text-slate-400 font-medium">Semua data kesehatan dalam batas normal.</p>
+                                </div>
+                            )}
                         </div>
                     </Card>
 
@@ -193,9 +305,30 @@ export default function AdminDashboard() {
                                 <Bell className="h-4 w-4 text-slate-400" /> Pusat Notifikasi
                             </h2>
                         </div>
-                        <div className="py-10 text-center">
-                            <Bell className="h-10 w-10 text-slate-100 mx-auto mb-3" />
-                            <p className="text-sm text-slate-400 font-medium">Belum ada pesan sistem baru.</p>
+                        <div className="bg-white">
+                            {activities.length > 0 ? (
+                                <div className="divide-y divide-slate-50">
+                                    {activities.map((activity) => (
+                                        <div key={activity.id} className="p-4 flex items-start gap-3 hover:bg-slate-50 transition-colors">
+                                            <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-white">
+                                                {activity.type === 'KUNJUNGAN_BALITA' ? <Baby className="h-3.5 w-3.5 text-blue-500" /> : <Heart className="h-3.5 w-3.5 text-rose-500" />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-[11px] font-bold text-slate-800 leading-tight">{activity.name}</p>
+                                                <p className="text-[10px] font-medium text-slate-400">{activity.description}</p>
+                                            </div>
+                                            <span className="text-[9px] font-bold text-slate-300 uppercase">
+                                                {new Date(activity.time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-10 text-center">
+                                    <Bell className="h-10 w-10 text-slate-100 mx-auto mb-3" />
+                                    <p className="text-sm text-slate-400 font-medium">Belum ada pesan sistem baru.</p>
+                                </div>
+                            )}
                         </div>
                     </Card>
 

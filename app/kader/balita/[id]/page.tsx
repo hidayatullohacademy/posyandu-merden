@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { createClient } from '@/lib/supabase';
-import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCircle, Syringe, Check, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -38,6 +38,16 @@ interface KunjunganRecord {
     created_at: string;
 }
 
+interface ImunisasiRecord {
+    id: string;
+    master_imun_id: string;
+    tanggal_jadwal: string;
+    tanggal_realisasi: string | null;
+    status: 'BELUM' | 'SELESAI';
+    catatan: string | null;
+    master_imunisasi?: { nama: string; toleransi_minggu: number };
+}
+
 interface ParentLink {
     id: string;
     nama_lengkap: string;
@@ -50,8 +60,11 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const { id } = use(params);
     const [balita, setBalita] = useState<BalitaDetail | null>(null);
     const [kunjungan, setKunjungan] = useState<KunjunganRecord[]>([]);
+    const [imunisasi, setImunisasi] = useState<ImunisasiRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    const [showImunForm, setShowImunForm] = useState(false);
+    const [selectedImun, setSelectedImun] = useState<ImunisasiRecord | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     const [showEditForm, setShowEditForm] = useState(false);
@@ -89,6 +102,12 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
         catatan: '',
         periode_kunjungan: localDate,
     });
+
+    const [imunFormData, setImunFormData] = useState({
+        tanggal_realisasi: localDate,
+        catatan: '',
+        tempat: 'Posyandu'
+    });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     /* eslint-disable react-hooks/exhaustive-deps */
@@ -111,7 +130,12 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 supabase
                     .from('orang_tua_balita')
                     .select('user_id, users(id, nama_lengkap, nik)')
+                    .eq('balita_id', id),
+                supabase
+                    .from('imunisasi_balita')
+                    .select('*, master_imunisasi:master_imun_id(nama, toleransi_minggu)')
                     .eq('balita_id', id)
+                    .order('tanggal_jadwal', { ascending: true })
             ]);
 
             if (balitaRes.error) throw balitaRes.error;
@@ -121,6 +145,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const parents = (linkedRes.data || []).map((l: any) => l.users);
             setLinkedParents(parents);
+            setImunisasi(imunisasiRes.data || []);
         } catch {
             toast.error('Gagal memuat data balita');
         } finally {
@@ -478,6 +503,59 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 </Card>
             )}
 
+            {/* Immunization Section */}
+            <div className="flex items-center justify-between mt-6">
+                <h3 className="text-sm font-semibold text-slate-700">Imunisasi</h3>
+                <Link href="/kader/imunisasi" className="text-[10px] font-bold text-teal-600 uppercase tracking-wider hover:underline">Semua Jadwal</Link>
+            </div>
+
+            <Card className="p-4 bg-slate-50/50 border-slate-200">
+                {pendingImun.length > 0 ? (
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Agenda Mendatang</p>
+                        {pendingImun.slice(0, 3).map(i => {
+                            const status = getImunStatus(i);
+                            const Icon = status.icon;
+                            return (
+                                <div key={i.id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn("p-2 rounded-lg", status.color)}>
+                                            <Icon className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-700">{i.master_imunisasi?.nama}</p>
+                                            <p className="text-[10px] text-slate-400">Jadwal: {formatDate(i.tanggal_jadwal)}</p>
+                                        </div>
+                                    </div>
+                                    <Button size="sm" variant="outline" className="h-8 text-[10px]" onClick={() => {
+                                        setSelectedImun(i);
+                                        setShowImunForm(true);
+                                    }}>Tandai</Button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="text-center py-4">
+                        <Syringe className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+                        <p className="text-[11px] text-slate-400">Semua imunisasi terjadwal sudah terpenuhi</p>
+                    </div>
+                )}
+
+                {historyImun.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-slate-200">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Riwayat Terakhir</p>
+                        <div className="flex flex-wrap gap-2">
+                            {historyImun.slice(-5).map(i => (
+                                <div key={i.id} className="bg-emerald-50 text-emerald-700 text-[10px] font-medium px-2 py-1 rounded-lg border border-emerald-100">
+                                    {i.master_imunisasi?.nama}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </Card>
+
             {/* History + Add Button */}
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-700">Riwayat Kunjungan</h3>
@@ -803,6 +881,38 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                                 ))}
                             {allParents.length === 0 && <p className="text-center py-8 text-xs text-slate-400">Memuat data orang tua...</p>}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Immunization Form Modal */}
+            {showImunForm && selectedImun && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowImunForm(false)} />
+                    <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 animate-slide-up">
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-lg font-bold text-slate-800">Catat Imunisasi</h2>
+                            <button onClick={() => setShowImunForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="h-5 w-5 text-slate-400" /></button>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-4 bg-amber-50 p-3 rounded-xl border border-amber-100">
+                            Mencatat pemberian vaksin <strong>{selectedImun.master_imunisasi?.nama}</strong> untuk <strong>{balita?.nama}</strong>.
+                        </p>
+                        <form onSubmit={handleUpdateImunisasi} className="space-y-4">
+                            <Input label="Tanggal Pemberian" type="date" value={imunFormData.tanggal_realisasi} onChange={(e) => setImunFormData(p => ({ ...p, tanggal_realisasi: e.target.value }))} required />
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-slate-700">Tempat</label>
+                                <select value={imunFormData.tempat} onChange={(e) => setImunFormData(p => ({ ...p, tempat: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" required>
+                                    <option value="Posyandu">Posyandu</option>
+                                    <option value="Puskesmas">Puskesmas</option>
+                                    <option value="RS">Rumah Sakit</option>
+                                </select>
+                            </div>
+                            <Input label="Catatan" placeholder="Opsional" value={imunFormData.catatan} onChange={(e) => setImunFormData(p => ({ ...p, catatan: e.target.value }))} />
+                            <div className="pt-2 flex gap-3">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowImunForm(false)}>Batal</Button>
+                                <Button type="submit" className="flex-1" isLoading={isSaving}>Simpan</Button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

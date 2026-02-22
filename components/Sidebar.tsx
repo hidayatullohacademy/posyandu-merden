@@ -15,6 +15,9 @@ import {
     X,
     Baby,
     Heart,
+    History,
+    BarChart3,
+    BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase';
@@ -29,6 +32,9 @@ const adminMenuItems = [
     { label: 'Pengguna', href: '/admin/pengguna', icon: Users },
     { label: 'Imunisasi', href: '/admin/imunisasi', icon: Syringe },
     { label: 'Notifikasi', href: '/admin/notifikasi', icon: Bell },
+    { label: 'Audit Log', href: '/admin/audit', icon: History },
+    { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+    { label: 'Master Gizi', href: '/admin/gizi', icon: BookOpen },
 ];
 
 const kaderMenuItems = [

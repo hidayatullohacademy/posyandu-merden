@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn, formatDate, hitungUsiaTahun, hitungIMT, getStatusIMT, evaluateRisikoLansia, formatNumber, parseNumber, formatUsiaDetail, isValidNumber } from '@/lib/utils';
+import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -117,6 +118,14 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 .eq('id', id);
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'UPDATE',
+                entityType: 'LANSIA',
+                entityId: id,
+                details: { name: editFormData.nama_lengkap }
+            });
+
             toast.success('Data berhasil diperbarui');
             setShowEditForm(false);
             fetchData();
@@ -136,6 +145,14 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 .eq('id', id);
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'DELETE',
+                entityType: 'LANSIA',
+                entityId: id,
+                details: { name: lansia?.nama_lengkap }
+            });
+
             toast.success('Data berhasil dihapus');
             window.location.href = '/kader/lansia';
         } catch {
@@ -210,6 +227,13 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 throw error;
             }
 
+            await logAudit({
+                action: editVisitId ? 'UPDATE' : 'CREATE',
+                entityType: 'LANSIA',
+                entityId: editVisitId || id,
+                details: { lansia_name: lansia?.nama_lengkap, period: formData.periode_kunjungan, action: 'VISIT_RECORD' }
+            });
+
             toast.success(editVisitId ? 'Kunjungan diperbarui!' : 'Kunjungan berhasil dicatat!');
             setShowForm(false);
             setEditVisitId(null);
@@ -238,6 +262,14 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
                 .eq('id', visitToDeleteId);
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'DELETE',
+                entityType: 'LANSIA',
+                entityId: visitToDeleteId,
+                details: { lansia_id: id, action: 'DELETE_VISIT' }
+            });
+
             toast.success('Riwayat kunjungan dihapus');
             setShowDeleteVisitConfirm(false);
             setVisitToDeleteId(null);

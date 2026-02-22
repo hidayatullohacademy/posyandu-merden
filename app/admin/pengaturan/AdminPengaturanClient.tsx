@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
+import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 
 interface PosyanduItem {
@@ -125,10 +126,25 @@ export default function AdminPengaturanPage() {
             if (editId) {
                 const { error } = await supabase.from('posyandu').update(payload).eq('id', editId);
                 if (error) throw error;
+
+                await logAudit({
+                    action: 'UPDATE',
+                    entityType: 'POSYANDU',
+                    entityId: editId,
+                    details: { name: payload.nama }
+                });
+
                 toast.success('Data posyandu diperbarui!');
             } else {
                 const { error } = await supabase.from('posyandu').insert(payload);
                 if (error) throw error;
+
+                await logAudit({
+                    action: 'CREATE',
+                    entityType: 'POSYANDU',
+                    details: { name: payload.nama }
+                });
+
                 toast.success('Posyandu baru ditambahkan!');
             }
 

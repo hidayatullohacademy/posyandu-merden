@@ -6,7 +6,8 @@ import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCi
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi, formatNumber, parseNumber, formatUsiaDetail, isValidNumber } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaBulan, getZScoreBBU, getStatusGizi, formatNumber, parseNumber, formatUsiaDetail, isValidNumber, calculateZScoreFromMaster } from '@/lib/utils';
+import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { User, UserPlus, UserMinus, Search as SearchIcon } from 'lucide-react';
@@ -193,6 +194,13 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
 
             if (error) throw error;
 
+            await logAudit({
+                action: 'UPDATE',
+                entityType: 'VAKSIN',
+                entityId: selectedImun.id,
+                details: { balita_id: id, status: 'SELESAI', vaccine: selectedImun.master_imunisasi?.nama }
+            });
+
             toast.success('Pemberian imunisasi berhasil dicatat');
             setShowImunForm(false);
             fetchData();
@@ -220,6 +228,14 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 .eq('id', id);
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'UPDATE',
+                entityType: 'BALITA',
+                entityId: id,
+                details: { name: editFormData.nama }
+            });
+
             toast.success('Data berhasil diperbarui');
             setShowEditForm(false);
             fetchData();
@@ -239,6 +255,14 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 .eq('id', id);
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'DELETE',
+                entityType: 'BALITA',
+                entityId: id,
+                details: { name: balita?.nama }
+            });
+
             toast.success('Data berhasil dihapus');
             window.location.href = '/kader/balita';
         } catch {
@@ -268,7 +292,23 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
 
             // Calculate Status Gizi
             const usiaM = hitungUsiaBulan(balita!.tanggal_lahir);
-            const zScore = getZScoreBBU(balita!.jenis_kelamin as 'L' | 'P', usiaM, bb);
+
+            // Fetch Master Gizi for precise calculation
+            const { data: masterData } = await supabase
+                .from('master_gizi')
+                .select('*')
+                .eq('jenis_kelamin', balita!.jenis_kelamin)
+                .eq('umur_bulan', usiaM)
+                .maybeSingle();
+
+            let zScore = 0;
+            if (masterData) {
+                zScore = calculateZScoreFromMaster(bb, masterData);
+            } else {
+                // Fallback to hardcoded approximation if master data not found
+                zScore = getZScoreBBU(balita!.jenis_kelamin as 'L' | 'P', usiaM, bb);
+            }
+
             const statusGizi = getStatusGizi(zScore);
 
             const visitData = {
@@ -300,6 +340,13 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 return;
             }
 
+            await logAudit({
+                action: editVisitId ? 'UPDATE' : 'CREATE',
+                entityType: 'BALITA', // Actually a visit, but entity_type can be 'BALITA_VISIT' or similar
+                entityId: editVisitId || id,
+                details: { balita_name: balita?.nama, period: formData.periode_kunjungan, action: 'VISIT_RECORD' }
+            });
+
             toast.success(editVisitId ? 'Kunjungan diperbarui!' : 'Kunjungan berhasil dicatat!');
             setShowForm(false);
             setEditVisitId(null);
@@ -327,6 +374,14 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                 .eq('id', visitToDeleteId);
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'DELETE',
+                entityType: 'BALITA',
+                entityId: visitToDeleteId,
+                details: { balita_id: id, action: 'DELETE_VISIT' }
+            });
+
             toast.success('Riwayat kunjungan dihapus');
             setShowDeleteVisitConfirm(false);
             setVisitToDeleteId(null);
@@ -367,6 +422,14 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             }
 
             toast.success('Tautan akun berhasil');
+
+            await logAudit({
+                action: 'UPDATE',
+                entityType: 'BALITA',
+                entityId: id,
+                details: { parent_id: parentId, action: 'LINK_PARENT' }
+            });
+
             fetchData();
         } catch (error: any) {
             toast.error(`Gagal menautkan: ${error.message}`);
@@ -385,6 +448,14 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             if (!res.ok) throw new Error(data.error || 'Server error');
 
             toast.success('Tautan akun dicopot');
+
+            await logAudit({
+                action: 'UPDATE',
+                entityType: 'BALITA',
+                entityId: id,
+                details: { parent_id: parentId, action: 'UNLINK_PARENT' }
+            });
+
             fetchData();
         } catch (error: any) {
             toast.error(`Gagal mencopot: ${error.message}`);

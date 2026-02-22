@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase';
 import { X, Send, Copy, Check, MessageSquare, Users, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 
 interface PosyanduItem {
@@ -81,7 +82,8 @@ export default function BroadcastModal({ isOpen, onClose }: BroadcastModalProps)
         return `Halo Ayah/Bunda warga Desa Merden,\n\nMengingatkan kembali bahwa besok ada jadwal Posyandu di *${selectedPosyandu.nama}* mulai jam *${selectedPosyandu.jam_buka}*. \n\nMohon kehadirannya untuk pemeriksaan kesehatan rutin. Terima kasih! 🙏`;
     };
 
-    const copyAllNumbers = () => {
+    const copyAllNumbers = async () => {
+        if (!selectedPosyandu) return;
         const numbers = recipients.map(r => r.no_hp).filter(Boolean).join(',');
         if (!numbers) {
             toast.error('Tidak ada nomor untuk disalin');
@@ -89,14 +91,29 @@ export default function BroadcastModal({ isOpen, onClose }: BroadcastModalProps)
         }
         navigator.clipboard.writeText(numbers);
         setIsCopied(true);
+
+        await logAudit({
+            action: 'BROADCAST',
+            entityType: 'USER',
+            details: { count: recipients.length, posyandu: selectedPosyandu.nama, action: 'COPY_NUMBERS' }
+        });
+
         toast.success('Daftar nomor berhasil disalin');
         setTimeout(() => setIsCopied(false), 2000);
     };
 
-    const openWhatsApp = (no_hp: string) => {
+    const openWhatsApp = async (no_hp: string) => {
         const cleanPhone = no_hp.replace(/[^0-9]/g, '');
         const finalPhone = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
         const message = encodeURIComponent(generateMessage());
+
+        await logAudit({
+            action: 'BROADCAST',
+            entityType: 'NOTIFIKASI',
+            entityId: no_hp,
+            details: { recipient_phone: no_hp, posyandu: selectedPosyandu?.nama, action: 'SEND_INDIVIDUAL_WA' }
+        });
+
         window.open(`https://wa.me/${finalPhone}?text=${message}`, '_blank');
     };
 

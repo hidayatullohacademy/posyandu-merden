@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn, hitungUsiaBulan, formatUsiaDetail } from '@/lib/utils';
+import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -162,6 +163,12 @@ export default function KaderBalitaPage() {
             });
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'CREATE',
+                entityType: 'BALITA',
+                details: { name: formData.nama.trim(), nik: nikValue }
+            });
 
             toast.success('Balita berhasil didaftarkan!');
             setShowForm(false);

@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn, hitungUsiaTahun, formatUsiaDetail } from '@/lib/utils';
+import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -149,6 +150,12 @@ export default function KaderLansiaPage() {
             });
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'CREATE',
+                entityType: 'LANSIA',
+                details: { name: formData.nama_lengkap.trim(), nik: nikValue }
+            });
 
             toast.success('Lansia berhasil didaftarkan!');
             setShowForm(false);

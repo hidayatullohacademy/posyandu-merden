@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
+import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 
 interface ImunisasiItem {
@@ -104,6 +105,14 @@ export default function AdminImunisasiPage() {
             if (editId) {
                 const { error } = await supabase.from('master_imunisasi').update(payload).eq('id', editId);
                 if (error) throw error;
+
+                await logAudit({
+                    action: 'UPDATE',
+                    entityType: 'VAKSIN',
+                    entityId: editId,
+                    details: { name: payload.nama, age: payload.usia_bulan }
+                });
+
                 toast.success('Data imunisasi diperbarui!');
             } else {
                 const { data: { user } } = await supabase.auth.getUser();
@@ -112,6 +121,13 @@ export default function AdminImunisasiPage() {
                     created_by: user?.id,
                 });
                 if (error) throw error;
+
+                await logAudit({
+                    action: 'CREATE',
+                    entityType: 'VAKSIN',
+                    details: { name: payload.nama, age: payload.usia_bulan }
+                });
+
                 toast.success('Vaksin baru ditambahkan!');
             }
 
@@ -132,6 +148,14 @@ export default function AdminImunisasiPage() {
                 .eq('id', item.id);
 
             if (error) throw error;
+
+            await logAudit({
+                action: 'UPDATE',
+                entityType: 'VAKSIN',
+                entityId: item.id,
+                details: { name: item.nama, action: item.is_active ? 'DEACTIVATE' : 'ACTIVATE' }
+            });
+
             toast.success(item.is_active ? 'Vaksin dinonaktifkan' : 'Vaksin diaktifkan');
             fetchData();
         } catch {

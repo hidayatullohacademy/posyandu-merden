@@ -26,6 +26,21 @@ export function formatDate(date: string | Date | null | undefined): string {
 }
 
 /**
+ * Format tanggal dan waktu ke format Indonesia
+ * @example formatDateTime('2025-01-15T10:00:00Z') → '15 Jan 2025, 17:00'
+ */
+export function formatDateTime(date: string | Date | null | undefined, formatStr: string = 'd MMM yyyy, HH:mm'): string {
+    if (!date) return '-';
+    try {
+        const d = typeof date === 'string' ? new Date(date) : date;
+        if (isNaN(d.getTime())) return '-';
+        return format(d, formatStr, { locale: id });
+    } catch {
+        return '-';
+    }
+}
+
+/**
  * Format tanggal singkat
  * @example formatDateShort('2025-01-15') → '15 Jan 2025'
  */
@@ -159,6 +174,28 @@ export function getZScoreBBU(jk: 'L' | 'P', umurBulan: number, beratKg: number):
     const sd = m * 0.10;
     if (sd === 0) return 0; // Guard terhadap division by zero
     const zScore = (beratKg - m) / sd;
+    return Math.round(zScore * 100) / 100;
+}
+
+/**
+ * Hitung Z-Score BB/U menggunakan Master Data dari Database
+ */
+export function calculateZScoreFromMaster(beratKg: number, master: any): number {
+    if (!master || !beratKg) return 0;
+    
+    const { median, sd_minus_3, sd_minus_2, sd_minus_1, sd_plus_1, sd_plus_2, sd_plus_3 } = master;
+    
+    let zScore = 0;
+    if (beratKg === median) {
+        zScore = 0;
+    } else if (beratKg > median) {
+        // SD Positif
+        zScore = (beratKg - median) / (sd_plus_1 - median);
+    } else {
+        // SD Negatif
+        zScore = (beratKg - median) / (median - sd_minus_1);
+    }
+
     return Math.round(zScore * 100) / 100;
 }
 

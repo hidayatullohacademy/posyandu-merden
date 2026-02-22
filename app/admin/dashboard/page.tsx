@@ -19,6 +19,16 @@ import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Cell
+} from 'recharts';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -42,6 +52,7 @@ export default function AdminDashboard() {
         description: string;
         time: string;
     }[]>([]);
+    const [participationData, setParticipationData] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const supabase = createClient();
 
@@ -132,6 +143,32 @@ export default function AdminDashboard() {
                     });
                 });
                 setActivities(combinedActivities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5));
+
+                // Fetch Participation Data for Chart
+                const now = new Date();
+                const currentMonth = now.getMonth() + 1;
+                const currentYear = now.getFullYear();
+
+                const [posyandus, allBalita, allLansia, currentVisitsB, currentVisitsL] = await Promise.all([
+                    supabase.from('posyandu').select('id, nama').eq('is_active', true).order('nama'),
+                    supabase.from('balita').select('id, posyandu_id').eq('is_active', true),
+                    supabase.from('lansia').select('id, posyandu_id').eq('is_active', true),
+                    supabase.from('kunjungan_balita').select('posyandu_id').eq('bulan', currentMonth).eq('tahun', currentYear),
+                    supabase.from('kunjungan_lansia').select('posyandu_id').eq('bulan', currentMonth).eq('tahun', currentYear),
+                ]);
+
+                const chartData = posyandus.data?.map(p => {
+                    const pPop = (allBalita.data?.filter(b => b.posyandu_id === p.id).length || 0) +
+                        (allLansia.data?.filter(l => l.posyandu_id === p.id).length || 0);
+                    const pVisits = (currentVisitsB.data?.filter(v => v.posyandu_id === p.id).length || 0) +
+                        (currentVisitsL.data?.filter(v => v.posyandu_id === p.id).length || 0);
+
+                    return {
+                        name: p.nama.replace('Posyandu ', ''),
+                        rate: pPop > 0 ? Math.round((pVisits / pPop) * 100) : 0,
+                    };
+                }) || [];
+                setParticipationData(chartData);
 
             } catch (error) {
                 console.error('Error fetching dashboard stats:', error);
@@ -287,16 +324,43 @@ export default function AdminDashboard() {
                         </div>
                     </Card>
 
-                    <Card className="p-5 border-slate-200 shadow-sm">
-                        <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
+                    <Card className="p-5 border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
                             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                                <TrendingUp className="h-4 w-4 text-teal-500" /> Ringkasan Aktivitas
+                                <TrendingUp className="h-4 w-4 text-teal-500" /> Cakupan Layanan (%)
                             </h2>
+                            <Link href="/admin/analytics" className="text-[10px] font-bold text-teal-600 hover:underline">Lihat Detail</Link>
                         </div>
-                        <div className="p-12 text-center">
-                            <CheckCircle2 className="h-10 w-10 text-slate-100 mx-auto mb-3" />
-                            <p className="text-sm text-slate-400 font-medium">Semua data operasional terpusat dan aman.</p>
+                        <div className="h-[250px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={participationData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }}
+                                        domain={[0, 100]}
+                                    />
+                                    <Tooltip
+                                        cursor={{ fill: '#f8fafc' }}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '11px' }}
+                                    />
+                                    <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={32}>
+                                        {participationData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.rate < 60 ? '#f43f5e' : '#0d9488'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
+                        <p className="text-[10px] text-slate-400 mt-4 italic font-medium">Data partisipasi masyarakat bulan ini.</p>
                     </Card>
                 </div>
 

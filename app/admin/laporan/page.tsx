@@ -6,6 +6,7 @@ import { FileText, Download, TrendingUp, BarChart3, Baby, Heart } from 'lucide-r
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn, namaBulan } from '@/lib/utils';
+import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 
 type ReportType = 'balita' | 'lansia' | 'rekapitulasi';
@@ -242,6 +243,13 @@ export default function AdminLaporanPage() {
             const wb = xlsx.utils.book_new();
             xlsx.utils.book_append_sheet(wb, ws, 'Laporan');
             xlsx.writeFile(wb, filename);
+
+            await logAudit({
+                action: 'EXPORT',
+                entityType: 'LAPORAN',
+                details: { filename, reportType, posyandu: selectedPosyanduId }
+            });
+
             toast.success(`Laporan berhasil diunduh: ${filename} `);
         } catch {
             toast.error('Gagal mengunduh laporan');

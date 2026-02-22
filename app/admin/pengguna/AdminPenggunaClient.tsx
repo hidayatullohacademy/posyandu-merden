@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Users, Plus, Search, X, Shield, UserCheck, Edit, UploadCloud, Download, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import { logAudit } from '@/lib/audit';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
@@ -202,6 +203,14 @@ export default function AdminPenggunaClient() {
                     .eq('id', editingUser.id);
 
                 if (error) throw error;
+
+                await logAudit({
+                    action: 'UPDATE',
+                    entityType: 'USER',
+                    entityId: editingUser.id,
+                    details: { name: formData.nama_lengkap, role: formData.role }
+                });
+
                 toast.success('Pengguna berhasil diperbarui');
             } else {
                 // Create new user via Backend API (avoids admin logout)
@@ -230,6 +239,14 @@ export default function AdminPenggunaClient() {
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Gagal menambahkan pengguna');
                 }
+
+                const resData = await response.json();
+                await logAudit({
+                    action: 'CREATE',
+                    entityType: 'USER',
+                    entityId: resData.id,
+                    details: { name: formData.nama_lengkap, role: formData.role }
+                });
 
                 toast.success('Pengguna berhasil ditambahkan (password: 12345678)');
             }
@@ -302,6 +319,12 @@ export default function AdminPenggunaClient() {
             const result = await response.json();
             if (!response.ok) throw new Error(result.error);
 
+            await logAudit({
+                action: 'BROADCAST',
+                entityType: 'USER',
+                details: { count: formattedUsers.length, action: 'BULK_IMPORT' }
+            });
+
             toast.success(result.message);
             if (result.results?.errors?.length > 0) {
                 console.error("Import errors:", result.results.errors);
@@ -356,6 +379,13 @@ export default function AdminPenggunaClient() {
                 throw new Error(err.error || 'Gagal mereset password');
             }
 
+            await logAudit({
+                action: 'UPDATE',
+                entityType: 'USER',
+                entityId: user.id,
+                details: { action: 'RESET_PASSWORD' }
+            });
+
             toast.success('Password berhasil direset ke 12345678');
             fetchData();
         } catch (error: unknown) {
@@ -401,6 +431,13 @@ export default function AdminPenggunaClient() {
         worksheet['!cols'] = wscols;
 
         xlsx.writeFile(workbook, `Daftar_Pengguna_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        await logAudit({
+            action: 'EXPORT',
+            entityType: 'USER',
+            details: { count: dataToExport.length, format: 'XLSX' }
+        });
+
         toast.success('File Excel berhasil diunduh');
     };
 

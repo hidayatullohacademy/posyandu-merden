@@ -119,7 +119,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [balitaRes, kunjunganRes, linkedRes] = await Promise.all([
+            const [balitaRes, kunjunganRes, linkedRes, imunisasiRes] = await Promise.all([
                 supabase.from('balita').select('*').eq('id', id).single(),
                 supabase
                     .from('kunjungan_balita')
@@ -150,6 +150,56 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             toast.error('Gagal memuat data balita');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const pendingImun = imunisasi.filter(i => i.status === 'BELUM');
+    const historyImun = imunisasi.filter(i => i.status === 'SELESAI');
+
+    const getImunStatus = (record: ImunisasiRecord) => {
+        const scheduleDate = new Date(record.tanggal_jadwal);
+        const toleranceWeeks = record.master_imunisasi?.toleransi_minggu || 4;
+        const deadlineDate = new Date(scheduleDate);
+        deadlineDate.setDate(deadlineDate.getDate() + (toleranceWeeks * 7));
+
+        const today = new Date();
+
+        if (today > deadlineDate) {
+            return { text: 'Terlambat', color: 'text-red-600 bg-red-50', icon: AlertCircle };
+        }
+
+        return { text: 'Belum', color: 'text-amber-600 bg-amber-50', icon: Clock };
+    };
+
+
+    const handleUpdateImunisasi = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedImun) return;
+
+        setIsSaving(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Sesi habis');
+
+            const { error } = await supabase
+                .from('imunisasi_balita')
+                .update({
+                    status: 'SELESAI',
+                    tanggal_realisasi: imunFormData.tanggal_realisasi,
+                    catatan: imunFormData.catatan || null,
+                    dicatat_oleh: user.id
+                })
+                .eq('id', selectedImun.id);
+
+            if (error) throw error;
+
+            toast.success('Pemberian imunisasi berhasil dicatat');
+            setShowImunForm(false);
+            fetchData();
+        } catch (error: any) {
+            toast.error(`Gagal mencatat imunisasi: ${error.message}`);
+        } finally {
+            setIsSaving(false);
         }
     };
 

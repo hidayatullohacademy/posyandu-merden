@@ -114,9 +114,18 @@ export function hitungUsiaDetail(tanggalLahir: string | Date) {
 export function formatUsiaDetail(tanggalLahir: string | Date): string {
     const { tahun, bulan, hari } = hitungUsiaDetail(tanggalLahir);
     const parts = [];
-    if (tahun > 0) parts.push(`${tahun} thn`);
-    if (bulan > 0) parts.push(`${bulan} bln`);
-    if (hari > 0 || parts.length === 0) parts.push(`${hari} hari`);
+    
+    if (tahun > 0) {
+        parts.push(`${tahun} thn`);
+        parts.push(`${bulan} bln`);
+        parts.push(`${hari} hari`);
+    } else if (bulan > 0) {
+        parts.push(`${bulan} bln`);
+        parts.push(`${hari} hari`);
+    } else {
+        parts.push(`${hari} hari`);
+    }
+    
     return parts.join(' ');
 }
 
@@ -183,7 +192,7 @@ export function getZScoreBBU(jk: 'L' | 'P', umurBulan: number, beratKg: number):
 export function calculateZScoreFromMaster(beratKg: number, master: any): number {
     if (!master || !beratKg) return 0;
     
-    const { median, sd_minus_3, sd_minus_2, sd_minus_1, sd_plus_1, sd_plus_2, sd_plus_3 } = master;
+    const { median, sd_minus_1, sd_plus_1 } = master;
     
     let zScore = 0;
     if (beratKg === median) {

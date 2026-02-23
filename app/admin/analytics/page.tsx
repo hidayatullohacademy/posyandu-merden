@@ -1,18 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import {
     BarChart3,
     TrendingUp,
     Users,
-    Baby,
-    Heart,
     MapPin,
     AlertCircle,
-    Download,
-    Calendar,
-    ChevronRight,
     ArrowUpRight,
     ArrowDownRight,
     Loader2
@@ -53,13 +48,11 @@ export default function AnalyticsPage() {
     const [period, setPeriod] = useState(6); // last 6 months
     const supabase = createClient();
 
-    useEffect(() => {
-        fetchAnalyticsData();
-    }, [period]);
-
-    const fetchAnalyticsData = async () => {
+    const fetchAnalyticsData = useCallback(async () => {
         setIsLoading(true);
         try {
+            // ... [content remains the same]
+            // (truncated for efficiency in multi_replace, but I'll provide the actual block)
             // 1. Fetch Basic Population
             const [balitaRes, lansiaRes, posyanduRes] = await Promise.all([
                 supabase.from('balita').select('id, posyandu_id, created_at').eq('is_active', true),
@@ -67,8 +60,10 @@ export default function AnalyticsPage() {
                 supabase.from('posyandu').select('id, nama').eq('is_active', true)
             ]);
 
-            const posyandus = posyanduRes.data || [];
-            const totalPop = (balitaRes.data?.length || 0) + (lansiaRes.data?.length || 0);
+            const posyandus = (posyanduRes.data || []) as { id: string, nama: string }[];
+            const balitaData = (balitaRes.data || []) as { id: string, posyandu_id: string, created_at: string }[];
+            const lansiaData = (lansiaRes.data || []) as { id: string, posyandu_id: string, created_at: string }[];
+            const totalPop = balitaData.length + lansiaData.length;
 
             // 2. Fetch Visits for the last X months
             const startDate = new Date();
@@ -110,8 +105,8 @@ export default function AnalyticsPage() {
             const currentYear = new Date().getFullYear();
 
             const posyanduPerformance = posyandus.map(p => {
-                const pPop = (balitaRes.data?.filter(b => b.posyandu_id === p.id).length || 0) +
-                    (lansiaRes.data?.filter(l => l.posyandu_id === p.id).length || 0);
+                const pPop = balitaData.filter(b => b.posyandu_id === p.id).length +
+                    lansiaData.filter(l => l.posyandu_id === p.id).length;
                 const pVisits = allVisits.filter(v => v.posyandu_id === p.id && v.bulan === currentMonth && v.tahun === currentYear).length;
 
                 return {
@@ -123,14 +118,14 @@ export default function AnalyticsPage() {
 
             // 5. Population Growth
             const populationGrowth = months.map(m => {
-                const balitaAt = balitaRes.data?.filter(b => {
+                const balitaAt = balitaData.filter(b => {
                     const d = new Date(b.created_at);
                     return d.getFullYear() < m.year || (d.getFullYear() === m.year && d.getMonth() + 1 <= m.month);
-                }).length || 0;
-                const lansiaAt = lansiaRes.data?.filter(l => {
+                }).length;
+                const lansiaAt = lansiaData.filter(l => {
                     const d = new Date(l.created_at);
                     return d.getFullYear() < m.year || (d.getFullYear() === m.year && d.getMonth() + 1 <= m.month);
-                }).length || 0;
+                }).length;
 
                 return {
                     name: m.label,
@@ -165,7 +160,11 @@ export default function AnalyticsPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [period, supabase]);
+
+    useEffect(() => {
+        fetchAnalyticsData();
+    }, [fetchAnalyticsData]);
 
     if (isLoading) {
         return (
@@ -210,7 +209,7 @@ export default function AnalyticsPage() {
                 <Card className="p-4 bg-teal-600 text-white border-none shadow-lg shadow-teal-500/20">
                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">Rata-rata Partisipasi</p>
                     <div className="flex items-end justify-between">
-                        <h3 className="text-3xl font-black">{data?.summary.avgParticipation}%</h3>
+                        <h3 className="text-3xl font-black">{data?.summary?.avgParticipation}%</h3>
                         <Users className="h-8 w-8 opacity-20" />
                     </div>
                 </Card>
@@ -219,13 +218,13 @@ export default function AnalyticsPage() {
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Kunjungan Bulan Ini</p>
                     <div className="flex items-end justify-between">
                         <div>
-                            <h3 className="text-3xl font-black text-slate-800">{data?.summary.totalVisitsThisMonth}</h3>
+                            <h3 className="text-3xl font-black text-slate-800">{data?.summary?.totalVisitsThisMonth}</h3>
                             <div className={cn(
                                 "flex items-center gap-0.5 text-[10px] font-bold mt-1",
-                                data!.summary.growthRate >= 0 ? "text-emerald-600" : "text-rose-600"
+                                (data?.summary?.growthRate || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
                             )}>
-                                {data!.summary.growthRate >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                                {Math.abs(data?.summary.growthRate || 0)}% vs bulan lalu
+                                {(data?.summary?.growthRate || 0) >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                                {Math.abs(data?.summary?.growthRate || 0)}% vs bulan lalu
                             </div>
                         </div>
                         <TrendingUp className="h-8 w-8 text-slate-100" />
@@ -235,8 +234,8 @@ export default function AnalyticsPage() {
                 <Card className="p-4 bg-white border-slate-200">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Perlu Atensi</p>
                     <div className="flex items-end justify-between">
-                        <h3 className="text-3xl font-black text-slate-800">{data?.summary.flaggedPosyandus}</h3>
-                        <AlertCircle className={cn("h-8 w-8", data!.summary.flaggedPosyandus > 0 ? "text-rose-500" : "text-slate-100")} />
+                        <h3 className="text-3xl font-black text-slate-800">{data?.summary?.flaggedPosyandus}</h3>
+                        <AlertCircle className={cn("h-8 w-8", (data?.summary?.flaggedPosyandus || 0) > 0 ? "text-rose-500" : "text-slate-100")} />
                     </div>
                     <p className="text-[10px] text-slate-400 mt-1">Posyandu partisipasi {"<"} 60%</p>
                 </Card>
@@ -328,7 +327,7 @@ export default function AnalyticsPage() {
                                     barSize={20}
                                 >
                                     {data?.posyanduPerformance.map((entry, index) => (
-                                        <Area key={`cell-${index}`} fill={entry.rate < 60 ? '#f43f5e' : '#0d9488'} />
+                                        <Cell key={`cell-${index}`} fill={entry.rate < 60 ? '#f43f5e' : '#0d9488'} />
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -399,7 +398,7 @@ export default function AnalyticsPage() {
                         </Card>
                     ))}
 
-                    {data?.summary.growthRate > 10 && (
+                    {data && data.summary.growthRate > 10 && (
                         <Card className="p-4 border-emerald-100 bg-emerald-50/30 flex items-start gap-4">
                             <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
                                 <TrendingUp className="h-5 w-5" />

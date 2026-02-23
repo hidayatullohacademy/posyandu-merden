@@ -6,20 +6,20 @@ import {
     Baby,
     Users,
     Activity,
-    HeartPulse,
     Syringe,
-    CalendarDays,
     Bell,
     UserCircle,
-    ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
-import { formatDate } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { UpcomingSchedule } from '@/components/kader/UpcomingSchedule';
+import { HealthAlerts } from '@/components/kader/HealthAlerts';
 
 interface Stats {
     balitaCount: number;
     lansiaCount: number;
+    posyanduName: string;
+    posyanduOpening: string;
+    posyanduId: string;
 }
 
 export default function KaderDashboard() {
@@ -27,6 +27,9 @@ export default function KaderDashboard() {
     const [stats, setStats] = useState<Stats>({
         balitaCount: 0,
         lansiaCount: 0,
+        posyanduName: 'Posyandu ...',
+        posyanduOpening: '...',
+        posyanduId: '',
     });
     const [isLoading, setIsLoading] = useState(true);
     const supabase = createClient();
@@ -47,15 +50,19 @@ export default function KaderDashboard() {
                     if (userData) {
                         setUserName(userData.nama_lengkap);
 
-                        // 2. Fetch stats based on posyandu_id
-                        const [balitaRes, lansiaRes] = await Promise.all([
+                        // 2. Fetch stats & posyandu details
+                        const [balitaRes, lansiaRes, posRes] = await Promise.all([
                             supabase.from('balita').select('*', { count: 'exact', head: true }).eq('posyandu_id', userData.posyandu_id).eq('is_active', true),
                             supabase.from('lansia').select('*', { count: 'exact', head: true }).eq('posyandu_id', userData.posyandu_id).eq('is_active', true),
+                            supabase.from('posyandu').select('nama, hari_buka, jam_buka, jam_tutup').eq('id', userData.posyandu_id).single(),
                         ]);
 
                         setStats({
                             balitaCount: balitaRes.count || 0,
                             lansiaCount: lansiaRes.count || 0,
+                            posyanduName: posRes.data?.nama || 'Posyandu',
+                            posyanduOpening: posRes.data ? `${posRes.data.hari_buka} (${posRes.data.jam_buka.slice(0, 5)}-${posRes.data.jam_tutup.slice(0, 5)})` : '...',
+                            posyanduId: userData.posyandu_id,
                         });
                     }
                 }
@@ -74,8 +81,13 @@ export default function KaderDashboard() {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Kader</h1>
-                    <p className="text-slate-500 font-medium truncate max-w-md">Monitoring kesehatan masyarakat</p>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                        {isLoading ? '...' : stats.posyanduName}
+                    </h1>
+                    <p className="text-teal-600 font-bold text-xs uppercase tracking-widest flex items-center gap-1.5 mt-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
+                        Jadwal: {stats.posyanduOpening}
+                    </p>
                 </div>
                 <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
                     <div className="h-10 w-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center border border-teal-100">
@@ -143,6 +155,12 @@ export default function KaderDashboard() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Proactive Expert Widgets */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <UpcomingSchedule posyanduId={stats.posyanduId} />
+                <HealthAlerts posyanduId={stats.posyanduId} />
             </div>
 
             {/* Main Action Grid */}

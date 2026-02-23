@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import { FileText, Download, TrendingUp, BarChart3, Baby, Heart } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
@@ -11,10 +11,6 @@ import toast from 'react-hot-toast';
 
 type ReportType = 'balita' | 'lansia' | 'rekapitulasi';
 
-const BULAN_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
-    value: i + 1,
-    label: namaBulan(i + 1),
-}));
 
 interface PosyanduItem {
     id: string;
@@ -47,7 +43,7 @@ export default function AdminLaporanPage() {
     const [isLoadingTrend, setIsLoadingTrend] = useState(false);
     const supabase = createClient();
 
-    const loadStats = async () => {
+    const loadStats = useCallback(async () => {
         setIsLoadingStats(true);
         try {
             let balitaQuery = supabase.from('balita').select('id', { count: 'exact', head: true }).eq('is_active', true);
@@ -80,9 +76,9 @@ export default function AdminLaporanPage() {
         } finally {
             setIsLoadingStats(false);
         }
-    };
+    }, [bulan, tahun, selectedPosyanduId, supabase]);
 
-    const loadTrendData = async () => {
+    const loadTrendData = useCallback(async () => {
         setIsLoadingTrend(true);
         try {
             const months = [];
@@ -115,14 +111,14 @@ export default function AdminLaporanPage() {
             }));
 
             setTrendData(trendResults);
-        } catch (error) {
-            console.error('Error loading trend data:', error);
+        } catch {
+            toast.error('Gagal memuat tren data');
         } finally {
             setIsLoadingTrend(false);
         }
-    };
+    }, [selectedPosyanduId, supabase]);
 
-    const fetchPosyandu = async () => {
+    const fetchPosyandu = useCallback(async () => {
         try {
             const { data } = await supabase.from('posyandu').select('id, nama').eq('is_active', true);
             if (data) {
@@ -134,18 +130,17 @@ export default function AdminLaporanPage() {
         } catch (error) {
             console.error('Error fetching posyandu:', error);
         }
-    };
+    }, [supabase]);
 
     useEffect(() => {
         fetchPosyandu();
-    }, []);
+    }, [fetchPosyandu]);
 
     // Auto load stats when month/year/posyandu changes
     useEffect(() => {
         loadStats();
         loadTrendData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [periode, selectedPosyanduId]);
+    }, [loadStats, loadTrendData]);
 
     const handleExport = async () => {
         setIsGenerating(true);
@@ -171,7 +166,6 @@ export default function AdminLaporanPage() {
 
                 if (error) throw error;
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data = (kunjunganData || []).map((k: any, i: number) => ({
                     'No': i + 1,
                     'Nama': (k.balita as { nama: string })?.nama || '',
@@ -203,7 +197,6 @@ export default function AdminLaporanPage() {
 
                 if (error) throw error;
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data = (kunjunganData || []).map((k: any, i: number) => ({
                     'No': i + 1,
                     'Nama': (k.lansia as { nama_lengkap: string })?.nama_lengkap || '',

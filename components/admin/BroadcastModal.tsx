@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import { X, Send, Copy, Check, MessageSquare, Users, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
 import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 
@@ -34,13 +33,7 @@ export default function BroadcastModal({ isOpen, onClose }: BroadcastModalProps)
     const [isCopied, setIsCopied] = useState(false);
     const supabase = createClient();
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchPosyandu();
-        }
-    }, [isOpen]);
-
-    const fetchPosyandu = async () => {
+    const fetchPosyandu = useCallback(async () => {
         const { data } = await supabase.from('posyandu').select('id, nama, hari_buka, jam_buka').eq('is_active', true);
         if (data) {
             const sortedData = [...data].sort((a, b) =>
@@ -48,7 +41,13 @@ export default function BroadcastModal({ isOpen, onClose }: BroadcastModalProps)
             );
             setPosyanduList(sortedData);
         }
-    };
+    }, [supabase]);
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchPosyandu();
+        }
+    }, [isOpen, fetchPosyandu]);
 
     const fetchRecipients = async (posyanduId: string) => {
         setIsLoading(true);
@@ -163,7 +162,7 @@ export default function BroadcastModal({ isOpen, onClose }: BroadcastModalProps)
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Preview Pesan</label>
                                 <div className="p-4 bg-teal-50/50 border border-teal-100/50 rounded-xl">
                                     <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed italic">
-                                        "{generateMessage()}"
+                                        &quot;{generateMessage()}&quot;
                                     </p>
                                 </div>
                             </div>

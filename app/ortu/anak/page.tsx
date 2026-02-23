@@ -86,11 +86,7 @@ export default function OrtuAnakPage() {
     };
 
     const getUsiaLabel = (tanggalLahir: string) => {
-        const bulan = hitungUsiaBulan(tanggalLahir);
-        if (bulan < 12) return `${bulan} bulan`;
-        const tahun = Math.floor(bulan / 12);
-        const sisa = bulan % 12;
-        return sisa > 0 ? `${tahun} thn ${sisa} bln` : `${tahun} tahun`;
+        return formatUsiaDetail(tanggalLahir);
     };
 
     if (isLoading) {

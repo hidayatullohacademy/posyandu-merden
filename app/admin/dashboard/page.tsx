@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Baby,
     Heart,
@@ -56,129 +56,135 @@ export default function AdminDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const supabase = createClient();
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            setIsLoading(true);
-            try {
-                const [balitaCount, lansiaCount, kaderCount, kunjunganBalitaCount, kunjunganLansiaCount] = await Promise.all([
-                    supabase.from('balita').select('*', { count: 'exact', head: true }),
-                    supabase.from('lansia').select('*', { count: 'exact', head: true }),
-                    supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'KADER'),
-                    supabase.from('kunjungan_balita').select('*', { count: 'exact', head: true }),
-                    supabase.from('kunjungan_lansia').select('*', { count: 'exact', head: true }),
-                ]);
+    const fetchStats = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const [balitaCount, lansiaCount, kaderCount, kunjunganBalitaCount, kunjunganLansiaCount] = await Promise.all([
+                supabase.from('balita').select('*', { count: 'exact', head: true }).eq('is_active', true),
+                supabase.from('lansia').select('*', { count: 'exact', head: true }).eq('is_active', true),
+                supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'KADER'),
+                supabase.from('kunjungan_balita').select('*', { count: 'exact', head: true }),
+                supabase.from('kunjungan_lansia').select('*', { count: 'exact', head: true }),
+            ]);
 
-                setStats({
-                    totalBalita: balitaCount.count || 0,
-                    totalLansia: lansiaCount.count || 0,
-                    totalKader: kaderCount.count || 0,
-                    totalKunjungan: (kunjunganBalitaCount.count || 0) + (kunjunganLansiaCount.count || 0)
+            setStats({
+                totalBalita: balitaCount.count || 0,
+                totalLansia: lansiaCount.count || 0,
+                totalKader: kaderCount.count || 0,
+                totalKunjungan: (kunjunganBalitaCount.count || 0) + (kunjunganLansiaCount.count || 0)
+            });
+
+            // Fetch Health Alerts (Balita - Gizi)
+            const { data: balitaAlerts } = await supabase
+                .from('kunjungan_balita')
+                .select('id, created_at, status_gizi, balita:balita_id(nama)')
+                .in('status_gizi', ['KURANG', 'BURUK'])
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            // Fetch Health Alerts (Lansia - Tensi/Gula/Rujukan)
+            const { data: lansiaAlerts } = await supabase
+                .from('kunjungan_lansia')
+                .select('id, created_at, sistolik, diastolik, gula_darah, perlu_rujukan, lansia:lansia_id(nama_lengkap)')
+                .or('sistolik.gte.140,diastolik.gte.90,gula_darah.gte.200,perlu_rujukan.eq.true')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            const alerts: any[] = [];
+            balitaAlerts?.forEach((a: any) => {
+                alerts.push({
+                    id: a.id,
+                    name: a.balita?.nama || 'Anonim',
+                    type: 'BALITA',
+                    issue: `Gizi ${a.status_gizi?.toLowerCase()}`,
+                    date: new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
                 });
+            });
+            lansiaAlerts?.forEach((a: any) => {
+                const issues = [];
+                if (a.sistolik >= 140 || a.diastolik >= 90) issues.push('Hipertensi');
+                if (a.gula_darah >= 200) issues.push('Gula Darah Tinggi');
+                if (a.perlu_rujukan) issues.push('Perlu Rujukan');
 
-                // Fetch Health Alerts (Balita - Gizi)
-                const { data: balitaAlerts } = await supabase
-                    .from('kunjungan_balita')
-                    .select('id, created_at, status_gizi, balita:balita_id(nama)')
-                    .in('status_gizi', ['KURANG', 'BURUK'])
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-
-                // Fetch Health Alerts (Lansia - Tensi/Gula/Rujukan)
-                const { data: lansiaAlerts } = await supabase
-                    .from('kunjungan_lansia')
-                    .select('id, created_at, sistolik, diastolik, gula_darah, perlu_rujukan, lansia:lansia_id(nama_lengkap)')
-                    .or('sistolik.gte.140,diastolik.gte.90,gula_darah.gte.200,perlu_rujukan.eq.true')
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-
-                const alerts: any[] = [];
-                balitaAlerts?.forEach((a: any) => {
-                    alerts.push({
-                        id: a.id,
-                        name: a.balita?.nama || 'Anonim',
-                        type: 'BALITA',
-                        issue: `Gizi ${a.status_gizi?.toLowerCase()}`,
-                        date: new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-                    });
+                alerts.push({
+                    id: a.id,
+                    name: a.lansia?.nama_lengkap || 'Anonim',
+                    type: 'LANSIA',
+                    issue: issues.join(', ') || 'Kondisi Risiko',
+                    date: new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
                 });
-                lansiaAlerts?.forEach((a: any) => {
-                    let issues = [];
-                    if (a.sistolik >= 140 || a.diastolik >= 90) issues.push('Hipertensi');
-                    if (a.gula_darah >= 200) issues.push('Gula Darah Tinggi');
-                    if (a.perlu_rujukan) issues.push('Perlu Rujukan');
+            });
+            setHealthAlerts(alerts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5));
 
-                    alerts.push({
-                        id: a.id,
-                        name: a.lansia?.nama_lengkap || 'Anonim',
-                        type: 'LANSIA',
-                        issue: issues.join(', ') || 'Kondisi Risiko',
-                        date: new Date(a.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-                    });
+            // Fetch Recent Activities
+            const [recentKB, recentKL] = await Promise.all([
+                supabase.from('kunjungan_balita').select('id, created_at, balita:balita_id(nama)').order('created_at', { ascending: false }).limit(3),
+                supabase.from('kunjungan_lansia').select('id, created_at, lansia:lansia_id(nama_lengkap)').order('created_at', { ascending: false }).limit(3)
+            ]);
+
+            const combinedActivities: any[] = [];
+            recentKB.data?.forEach((r: any) => {
+                combinedActivities.push({
+                    id: r.id,
+                    type: 'KUNJUNGAN_BALITA',
+                    name: r.balita?.nama,
+                    description: 'Pemeriksaan Balita',
+                    time: r.created_at
                 });
-                setHealthAlerts(alerts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5));
-
-                // Fetch Recent Activities
-                const [recentKB, recentKL] = await Promise.all([
-                    supabase.from('kunjungan_balita').select('id, created_at, balita:balita_id(nama)').order('created_at', { ascending: false }).limit(3),
-                    supabase.from('kunjungan_lansia').select('id, created_at, lansia:lansia_id(nama_lengkap)').order('created_at', { ascending: false }).limit(3)
-                ]);
-
-                const combinedActivities: any[] = [];
-                recentKB.data?.forEach((r: any) => {
-                    combinedActivities.push({
-                        id: r.id,
-                        type: 'KUNJUNGAN_BALITA',
-                        name: r.balita?.nama,
-                        description: 'Pemeriksaan Balita',
-                        time: r.created_at
-                    });
+            });
+            recentKL.data?.forEach((r: any) => {
+                combinedActivities.push({
+                    id: r.id,
+                    type: 'KUNJUNGAN_LANSIA',
+                    name: r.lansia?.nama_lengkap,
+                    description: 'Pemeriksaan Lansia',
+                    time: r.created_at
                 });
-                recentKL.data?.forEach((r: any) => {
-                    combinedActivities.push({
-                        id: r.id,
-                        type: 'KUNJUNGAN_LANSIA',
-                        name: r.lansia?.nama_lengkap,
-                        description: 'Pemeriksaan Lansia',
-                        time: r.created_at
-                    });
-                });
-                setActivities(combinedActivities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5));
+            });
+            setActivities(combinedActivities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5));
 
-                // Fetch Participation Data for Chart
-                const now = new Date();
-                const currentMonth = now.getMonth() + 1;
-                const currentYear = now.getFullYear();
+            // Fetch Participation Data for Chart
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1;
+            const currentYear = now.getFullYear();
 
-                const [posyandus, allBalita, allLansia, currentVisitsB, currentVisitsL] = await Promise.all([
-                    supabase.from('posyandu').select('id, nama').eq('is_active', true).order('nama'),
-                    supabase.from('balita').select('id, posyandu_id').eq('is_active', true),
-                    supabase.from('lansia').select('id, posyandu_id').eq('is_active', true),
-                    supabase.from('kunjungan_balita').select('posyandu_id').eq('bulan', currentMonth).eq('tahun', currentYear),
-                    supabase.from('kunjungan_lansia').select('posyandu_id').eq('bulan', currentMonth).eq('tahun', currentYear),
-                ]);
+            const [posyandusRes, allBalitaRes, allLansiaRes, currentVisitsBRes, currentVisitsLRes] = await Promise.all([
+                supabase.from('posyandu').select('id, nama').eq('is_active', true).order('nama'),
+                supabase.from('balita').select('id, posyandu_id').eq('is_active', true),
+                supabase.from('lansia').select('id, posyandu_id').eq('is_active', true),
+                supabase.from('kunjungan_balita').select('posyandu_id').eq('bulan', currentMonth).eq('tahun', currentYear),
+                supabase.from('kunjungan_lansia').select('posyandu_id').eq('bulan', currentMonth).eq('tahun', currentYear),
+            ]);
 
-                const chartData = posyandus.data?.map(p => {
-                    const pPop = (allBalita.data?.filter(b => b.posyandu_id === p.id).length || 0) +
-                        (allLansia.data?.filter(l => l.posyandu_id === p.id).length || 0);
-                    const pVisits = (currentVisitsB.data?.filter(v => v.posyandu_id === p.id).length || 0) +
-                        (currentVisitsL.data?.filter(v => v.posyandu_id === p.id).length || 0);
+            const posyandus = (posyandusRes.data || []) as { id: string, nama: string }[];
+            const allBalita = (allBalitaRes.data || []) as { id: string, posyandu_id: string }[];
+            const allLansia = (allLansiaRes.data || []) as { id: string, posyandu_id: string }[];
+            const currentVisitsB = (currentVisitsBRes.data || []) as { posyandu_id: string }[];
+            const currentVisitsL = (currentVisitsLRes.data || []) as { posyandu_id: string }[];
 
-                    return {
-                        name: p.nama.replace('Posyandu ', ''),
-                        rate: pPop > 0 ? Math.round((pVisits / pPop) * 100) : 0,
-                    };
-                }) || [];
-                setParticipationData(chartData);
+            const chartData = posyandus.map(p => {
+                const pPop = allBalita.filter(b => b.posyandu_id === p.id).length +
+                    allLansia.filter(l => l.posyandu_id === p.id).length;
+                const pVisits = currentVisitsB.filter(v => v.posyandu_id === p.id).length +
+                    currentVisitsL.filter(v => v.posyandu_id === p.id).length;
 
-            } catch (error) {
-                console.error('Error fetching dashboard stats:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+                return {
+                    name: p.nama.replace('Posyandu ', ''),
+                    rate: pPop > 0 ? Math.round((pVisits / pPop) * 100) : 0,
+                };
+            });
+            setParticipationData(chartData);
 
-        fetchStats();
+        } catch (error) {
+            console.error('Error fetching dashboard stats:', error);
+        } finally {
+            setIsLoading(false);
+        }
     }, [supabase]);
+
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats]);
 
     return (
         <div className="space-y-6 animate-fade-in pb-10">

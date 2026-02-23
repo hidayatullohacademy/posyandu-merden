@@ -10,6 +10,7 @@ import {
     Users,
     FileText,
     Settings,
+    Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +38,7 @@ const ortuMenuItems = [
     { label: 'Beranda', href: '/ortu/dashboard', icon: LayoutDashboard },
     { label: 'Anak Saya', href: '/ortu/anak', icon: Baby },
     { label: 'Imunisasi', href: '/ortu/imunisasi', icon: Syringe },
+    { label: 'Pesan', href: '/ortu/notifikasi', icon: Bell },
 ];
 
 export function BottomNav({ role }: BottomNavProps) {

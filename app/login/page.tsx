@@ -60,7 +60,7 @@ export default function LoginPage() {
                 return;
             }
 
-            const { email, role, status } = await response.json();
+            const { email, role } = await response.json();
 
             // Sign in with Supabase Auth using email (we use phone@posyandu.local as email)
             const { error: signInError } = await supabase.auth.signInWithPassword({

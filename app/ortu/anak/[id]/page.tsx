@@ -2,10 +2,10 @@
 
 import { useState, useEffect, use } from 'react';
 import { createClient } from '@/lib/supabase';
-import { ArrowLeft, TrendingUp, Calendar } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Scale, Activity, BellRing } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { cn, formatDate, hitungUsiaBulan, formatNumber } from '@/lib/utils';
+import { cn, formatDate, hitungUsiaBulan, formatNumber, getZScoreBBU, formatUsiaDetail } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -33,12 +33,19 @@ interface KunjunganRecord {
     catatan: string | null;
 }
 
+interface UpcomingVaccine {
+    id: string;
+    nama: string;
+    tanggal: string;
+}
+
 const BULAN_NAMES = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
 
 export default function OrtuAnakDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const [balita, setBalita] = useState<BalitaDetail | null>(null);
     const [kunjungan, setKunjungan] = useState<KunjunganRecord[]>([]);
+    const [nextVaccine, setNextVaccine] = useState<UpcomingVaccine | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const supabase = createClient();
 
@@ -48,15 +55,33 @@ export default function OrtuAnakDetailPage({ params }: { params: Promise<{ id: s
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [bRes, kRes] = await Promise.all([
+            const [bRes, kRes, vRes] = await Promise.all([
                 supabase.from('balita').select('*').eq('id', id).single(),
                 supabase.from('kunjungan_balita').select('*').eq('balita_id', id)
                     .order('tahun', { ascending: false }).order('bulan', { ascending: false }),
+                supabase.from('imunisasi_balita')
+                    .select('id, master:master_imun_id(nama), tanggal_jadwal')
+                    .eq('balita_id', id)
+                    .eq('status', 'BELUM')
+                    .gte('tanggal_jadwal', new Date().toISOString().split('T')[0])
+                    .order('tanggal_jadwal', { ascending: true })
+                    .limit(1)
+                    .maybeSingle()
             ]);
+
             if (bRes.error) throw bRes.error;
             setBalita(bRes.data);
             setKunjungan(kRes.data || []);
-        } catch {
+
+            if (vRes.data) {
+                setNextVaccine({
+                    id: vRes.data.id,
+                    nama: (vRes.data.master as any)?.nama || 'Vaksin',
+                    tanggal: vRes.data.tanggal_jadwal
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
             toast.error('Gagal memuat data');
         } finally {
             setIsLoading(false);
@@ -93,56 +118,134 @@ export default function OrtuAnakDetailPage({ params }: { params: Promise<{ id: s
                 <Link href="/ortu/anak" className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                     <ArrowLeft className="h-5 w-5 text-slate-500" />
                 </Link>
-                <h1 className="text-lg font-bold text-slate-800">Data Anak</h1>
+                <h1 className="text-lg font-bold text-slate-800">Detail Perkembangan</h1>
             </div>
 
-            {/* Profile */}
-            <Card className="p-5">
+            {/* Profile Card */}
+            <Card className="p-5 border-none shadow-sm bg-gradient-to-br from-white to-slate-50/50">
                 <div className="flex items-center gap-4 mb-4">
                     <div className={cn(
-                        'w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-xl',
+                        'w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg border-2 border-white',
                         balita.jenis_kelamin === 'L' ? 'bg-gradient-to-br from-blue-400 to-blue-600' : 'bg-gradient-to-br from-pink-400 to-pink-600'
                     )}>
                         {balita.nama.charAt(0)}
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800">{balita.nama}</h2>
-                        <p className="text-xs text-slate-400">Ibu: {balita.nama_ibu}</p>
+                        <h2 className="text-xl font-black text-slate-900 tracking-tight leading-tight">{balita.nama}</h2>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Anak Bunda {balita.nama_ibu}</span>
+                            <span className="h-1 w-1 bg-slate-300 rounded-full"></span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{balita.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</span>
+                        </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="bg-slate-50 rounded-xl p-3">
-                        <p className="text-[10px] text-slate-400 mb-0.5">Usia</p>
-                        <p className="font-semibold text-slate-700">
-                            {usia < 12 ? `${usia} bulan` : `${Math.floor(usia / 12)} thn ${usia % 12} bln`}
+                <div className="grid grid-cols-2 gap-3">
+                    {/* Age Badge */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-3 border border-slate-100 shadow-sm">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Usia Saat Ini</p>
+                        <p className="font-black text-slate-800">
+                            {formatUsiaDetail(balita.tanggal_lahir)}
                         </p>
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-3">
-                        <p className="text-[10px] text-slate-400 mb-0.5">Lahir</p>
-                        <p className="font-semibold text-slate-700 text-xs">{formatDate(balita.tanggal_lahir)}</p>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-3 border border-slate-100 shadow-sm">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tanggal Lahir</p>
+                        <p className="font-black text-slate-800 text-xs">{formatDate(balita.tanggal_lahir)}</p>
                     </div>
                 </div>
             </Card>
 
-            {/* Last Measurement */}
-            {lastK && (
-                <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100">
-                    <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="h-4 w-4 text-blue-600" />
-                        <span className="text-xs font-semibold text-blue-700">Pengukuran Terakhir — {BULAN_NAMES[lastK.bulan]} {lastK.tahun}</span>
+            {/* Clinical Snapshot Section (Expert Feature) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Last Visit Expertise */}
+                <Card className="p-4 border-orange-100 bg-orange-50/20 shadow-sm relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Scale className="h-20 w-20 text-orange-600" />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <p className="text-[10px] text-blue-500">Berat</p>
-                            <p className="text-lg font-bold text-blue-800">{formatNumber(lastK.berat_badan)} <span className="text-xs font-normal">kg</span></p>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-orange-500" />
+                            <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.1em]">Status Terakhir</h3>
                         </div>
-                        <div>
-                            <p className="text-[10px] text-blue-500">Tinggi</p>
-                            <p className="text-lg font-bold text-blue-800">{formatNumber(lastK.tinggi_badan)} <span className="text-xs font-normal">cm</span></p>
-                        </div>
+                        {lastK ? (
+                            <span className="text-[10px] font-bold text-slate-400">
+                                {BULAN_NAMES[lastK.bulan]} {lastK.tahun}
+                            </span>
+                        ) : (
+                            <span className="text-[10px] font-bold text-slate-400">Belum Ada Data</span>
+                        )}
                     </div>
+
+                    {lastK ? (
+                        <div className="space-y-3">
+                            <div className="flex items-end justify-between">
+                                <div>
+                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Interpretasi Berat</p>
+                                    <h4 className={cn(
+                                        "text-lg font-black tracking-tight",
+                                        lastK.status_gizi === 'NORMAL' ? 'text-emerald-600' :
+                                            lastK.status_gizi === 'KURANG' ? 'text-amber-600' : 'text-rose-600'
+                                    )}>
+                                        {lastK.status_gizi || 'Belum Ada'}
+                                    </h4>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Z-Score (BB/U)</p>
+                                    <p className="font-black text-slate-800">
+                                        {lastK.berat_badan ? getZScoreBBU(balita.jenis_kelamin as 'L' | 'P', hitungUsiaBulan(balita.tanggal_lahir), lastK.berat_badan) : '-'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="pt-2 border-t border-orange-200/30 flex gap-4">
+                                <div>
+                                    <p className="text-[9px] text-slate-400 font-black uppercase">BB</p>
+                                    <p className="text-xs font-black text-slate-700">{formatNumber(lastK.berat_badan)} kg</p>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] text-slate-400 font-black uppercase">TB</p>
+                                    <p className="text-xs font-black text-slate-700">{formatNumber(lastK.tinggi_badan)} cm</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="py-4 text-center">
+                            <p className="text-xs text-slate-400 font-medium">Bawa si kecil ke Posyandu untuk update status gizi</p>
+                        </div>
+                    )}
                 </Card>
-            )}
+
+                {/* Next Vaccine Expertise */}
+                <Card className="p-4 border-indigo-100 bg-indigo-50/20 shadow-sm relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <BellRing className="h-20 w-20 text-indigo-600" />
+                    </div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <Calendar className="h-4 w-4 text-indigo-500" />
+                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.1em]">Jadwal Terdekat</h3>
+                    </div>
+
+                    {nextVaccine ? (
+                        <div className="space-y-2">
+                            <div>
+                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Vaksin</p>
+                                <h4 className="text-lg font-black text-indigo-700 tracking-tight leading-tight">{nextVaccine.nama}</h4>
+                            </div>
+                            <div className="flex items-center justify-between pt-2 border-t border-indigo-200/30">
+                                <div>
+                                    <p className="text-[9px] text-slate-400 font-black uppercase">Prediksi Tanggal</p>
+                                    <p className="text-sm font-black text-slate-700">{formatDate(nextVaccine.tanggal)}</p>
+                                </div>
+                                <div className="bg-indigo-100/50 px-2 py-1 rounded-lg">
+                                    <span className="text-[10px] font-black text-indigo-700 uppercase">{hitungUsiaBulan(nextVaccine.tanggal)} Bln</span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="py-4 text-center">
+                            <p className="text-xs text-slate-400 font-medium">Semua jadwal rutin telah terpenuhi atau belum diatur</p>
+                        </div>
+                    )}
+                </Card>
+            </div>
 
             {/* Growth Chart */}
             <Card className="p-4 overflow-hidden">

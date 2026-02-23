@@ -1,21 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import {
     Scale,
-    Search,
     Plus,
     Edit2,
     Trash2,
     RefreshCw,
-    Download,
     Baby,
     ChevronRight,
-    Search as SearchIcon,
-    AlertCircle,
-    Info,
-    CheckCircle2
+    Search,
+    Info
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -57,11 +53,7 @@ export default function AdminGiziClient() {
         sd_plus_3: 0
     });
 
-    useEffect(() => {
-        fetchStandards();
-    }, []);
-
-    const fetchStandards = async () => {
+    const fetchStandards = useCallback(async () => {
         setIsLoading(true);
         try {
             const { data, error } = await supabase
@@ -78,7 +70,11 @@ export default function AdminGiziClient() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [supabase]);
+
+    useEffect(() => {
+        fetchStandards();
+    }, [fetchStandards]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

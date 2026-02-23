@@ -6,7 +6,7 @@ import { ArrowLeft, Activity, Plus, X, Calendar, AlertTriangle, HeartPulse, Edit
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, formatDate, hitungUsiaTahun, hitungIMT, getStatusIMT, evaluateRisikoLansia, formatNumber, parseNumber, formatUsiaDetail, isValidNumber } from '@/lib/utils';
+import { cn, formatDate, hitungIMT, getStatusIMT, evaluateRisikoLansia, formatNumber, parseNumber, formatUsiaDetail, isValidNumber } from '@/lib/utils';
 import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -338,7 +338,6 @@ export default function LansiaDetailPage({ params }: { params: Promise<{ id: str
         );
     }
 
-    const usia = hitungUsiaTahun(lansia.tanggal_lahir);
     const lastK = kunjungan[0];
 
     const getTensiColor = (sistolik: number | null) => {

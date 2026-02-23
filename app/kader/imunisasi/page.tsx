@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
-import { Syringe, Check, Clock, AlertCircle, X, Search, Filter, History, Calendar } from 'lucide-react';
+import { Check, Clock, AlertCircle, X, Search, Filter, History, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn, formatDate } from '@/lib/utils';
@@ -53,7 +53,6 @@ export default function KaderImunisasiPage() {
                 .order('tanggal_jadwal', { ascending: true });
 
             if (error) throw error;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setRecords((data as any) || []);
         } catch {
             toast.error('Gagal memuat jadwal imunisasi');

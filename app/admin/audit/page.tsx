@@ -1,20 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import {
     History,
     Search,
-    Filter,
-    Calendar,
-    User,
     Tag,
     Info,
     ChevronLeft,
     ChevronRight,
     RefreshCw,
-    Download,
-    Eye
+    Download
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -59,11 +55,7 @@ export default function AdminAuditPage() {
 
     const supabase = createClient();
 
-    useEffect(() => {
-        fetchLogs();
-    }, [page, filters]);
-
-    const fetchLogs = async () => {
+    const fetchLogs = useCallback(async () => {
         setIsLoading(true);
         try {
             let query = supabase
@@ -76,7 +68,7 @@ export default function AdminAuditPage() {
 
             if (filters.dateRange !== 'all') {
                 const now = new Date();
-                let startDate = new Date();
+                const startDate = new Date();
                 if (filters.dateRange === 'today') startDate.setHours(0, 0, 0, 0);
                 else if (filters.dateRange === 'week') startDate.setDate(now.getDate() - 7);
                 else if (filters.dateRange === 'month') startDate.setMonth(now.getMonth() - 1);
@@ -101,7 +93,11 @@ export default function AdminAuditPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [page, filters, searchQuery, supabase]);
+
+    useEffect(() => {
+        fetchLogs();
+    }, [fetchLogs]);
 
     const handleExport = () => {
         if (logs.length === 0) return;

@@ -394,7 +394,7 @@ export default function AdminPenggunaClient() {
         }
     };
 
-    const exportToExcel = () => {
+    const exportToExcel = async () => {
         if (filteredUsers.length === 0) {
             toast.error('Tidak ada data untuk diekspor');
             return;
@@ -428,7 +428,7 @@ export default function AdminPenggunaClient() {
             { wch: 12 }, // Status
             { wch: 20 }  // Terdaftar Pada
         ];
-        worksheet['!cols'] = wscols;
+        (worksheet as any)['!cols'] = wscols;
 
         xlsx.writeFile(workbook, `Daftar_Pengguna_${new Date().toISOString().split('T')[0]}.xlsx`);
 
@@ -441,12 +441,6 @@ export default function AdminPenggunaClient() {
         toast.success('File Excel berhasil diunduh');
     };
 
-    const roleCounts = {
-        ALL: users.length,
-        ADMIN: users.filter((u) => u.role === 'ADMIN').length,
-        KADER: users.filter((u) => u.role === 'KADER').length,
-        ORANG_TUA: users.filter((u) => u.role === 'ORANG_TUA').length,
-    };
 
     const handleSort = (key: keyof UserItem | 'posyandu') => {
         setSortConfig(prev => ({

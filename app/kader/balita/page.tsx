@@ -6,7 +6,7 @@ import { Baby, Plus, Search, ChevronRight, X } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { cn, hitungUsiaBulan, formatUsiaDetail } from '@/lib/utils';
+import { cn, formatUsiaDetail } from '@/lib/utils';
 import { logAudit } from '@/lib/audit';
 import toast from 'react-hot-toast';
 import Link from 'next/link';

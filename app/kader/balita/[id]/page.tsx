@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { createClient } from '@/lib/supabase';
-import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCircle, Syringe, Check, Clock } from 'lucide-react';
+import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCircle, Syringe, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -85,8 +85,8 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
     const [linkedParents, setLinkedParents] = useState<ParentLink[]>([]);
     const [allParents, setAllParents] = useState<ParentLink[]>([]);
     const [showLinkModal, setShowLinkModal] = useState(false);
-    const [isLinking, setIsLinking] = useState(false);
     const [parentSearch, setParentSearch] = useState('');
+    const [isLinking, setIsLinking] = useState(false);
 
     const supabase = createClient();
 
@@ -143,7 +143,6 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
             setBalita(balitaRes.data);
             setKunjungan(kunjunganRes.data || []);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const parents = (linkedRes.data || []).map((l: any) => l.users);
             setLinkedParents(parents);
             setImunisasi(imunisasiRes.data || []);
@@ -487,7 +486,6 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
         );
     }
 
-    const usia = hitungUsiaBulan(balita.tanggal_lahir);
     const lastKunjungan = kunjungan[0];
 
     return (
@@ -564,6 +562,89 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                     </div>
                 </div>
             </Card>
+
+            {/* Clinical Snapshot (Expert Feature) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4 border-teal-100 bg-teal-50/20 shadow-sm relative overflow-hidden">
+                    <div className="absolute -right-4 -top-4 opacity-5">
+                        <Scale className="h-20 w-20 text-teal-600" />
+                    </div>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-teal-600" />
+                            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Status Terakhir</h3>
+                        </div>
+                        {lastKunjungan ? (
+                            <span className="text-[10px] font-bold text-slate-400">
+                                {BULAN_NAMES[lastKunjungan.bulan]} {lastKunjungan.tahun}
+                            </span>
+                        ) : (
+                            <span className="text-[10px] font-bold text-slate-400">Belum Ada Data</span>
+                        )}
+                    </div>
+
+                    {lastKunjungan ? (
+                        <div className="space-y-3">
+                            <div className="flex items-end justify-between">
+                                <div>
+                                    <p className="text-[10px] text-slate-500 font-medium uppercase">Interpretasi Gizi</p>
+                                    <h4 className={cn(
+                                        "text-lg font-black transition-colors",
+                                        lastKunjungan.status_gizi === 'BAIK' ? 'text-emerald-600' :
+                                            lastKunjungan.status_gizi === 'KURANG' ? 'text-amber-600' : 'text-rose-600'
+                                    )}>
+                                        {lastKunjungan.status_gizi || 'Belum Dihitung'}
+                                    </h4>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] text-slate-500 font-medium uppercase">Z-Score (BB/U)</p>
+                                    <p className="font-black text-slate-700">
+                                        {lastKunjungan.berat_badan ? getZScoreBBU(balita.jenis_kelamin as 'L' | 'P', hitungUsiaBulan(balita.tanggal_lahir, lastKunjungan.bulan, lastKunjungan.tahun), lastKunjungan.berat_badan) : '-'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                                <div className={cn(
+                                    "h-full",
+                                    lastKunjungan.status_gizi === 'BAIK' ? 'bg-emerald-500 w-full' :
+                                        lastKunjungan.status_gizi === 'KURANG' ? 'bg-amber-500 w-2/3' : 'bg-rose-500 w-1/3'
+                                )} />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="py-4 text-center">
+                            <p className="text-xs text-slate-400 italic">Klik tombol "+" di bawah untuk input data</p>
+                        </div>
+                    )}
+                </Card>
+
+                <Card className="p-4 border-amber-100 bg-amber-50/20 shadow-sm relative overflow-hidden">
+                    <div className="absolute -right-4 -top-4 opacity-5">
+                        <Syringe className="h-20 w-20 text-amber-600" />
+                    </div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <Syringe className="h-4 w-4 text-amber-600" />
+                        <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Imunisasi Berikutnya</h3>
+                    </div>
+                    {pendingImun.length > 0 ? (
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-bold text-slate-800">{pendingImun[0].master_imunisasi?.nama}</p>
+                                <span className="text-[10px] font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full uppercase">
+                                    {formatDate(pendingImun[0].tanggal_jadwal)}
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                                Pastikan balita dalam kondisi sehat saat pemberian vaksin.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="py-4 text-center">
+                            <p className="text-xs text-slate-400 italic">Jadwal imunisasi lengkap</p>
+                        </div>
+                    )}
+                </Card>
+            </div>
 
             {/* Parent Account Link */}
             <Card className="p-4 border-dashed border-slate-200 bg-slate-50/30">
@@ -995,7 +1076,13 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                                             <p className="text-sm font-semibold text-slate-700 truncate">{parent.nama_lengkap}</p>
                                             <p className="text-[10px] text-slate-400">{parent.nik}</p>
                                         </div>
-                                        <Button size="sm" className="h-8 text-[10px] bg-teal-600" onClick={() => handleLinkParent(parent.id)}>
+                                        <Button
+                                            size="sm"
+                                            className="h-8 text-[10px] bg-teal-600"
+                                            onClick={() => handleLinkParent(parent.id)}
+                                            isLoading={isLinking}
+                                            disabled={isLinking}
+                                        >
                                             Tautkan
                                         </Button>
                                     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Plus, Search, X, Shield, UserCheck, Baby, ChevronDown, Check } from 'lucide-react';
+import { Users, Plus, Search, X, Shield, Baby, ChevronDown, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';

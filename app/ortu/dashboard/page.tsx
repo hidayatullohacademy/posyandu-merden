@@ -6,7 +6,6 @@ import {
     Baby,
     CalendarDays,
     Syringe,
-    BookOpen,
     UserCircle,
     Bell,
     ChevronRight,
@@ -239,20 +238,6 @@ export default function OrtuDashboard() {
                         </div>
                     </Link>
 
-                    <div className="bg-slate-50/50 rounded-2xl p-4 border border-dashed border-slate-200 flex items-center gap-4 opacity-70 cursor-not-allowed">
-                        <div className="p-3 bg-slate-100 rounded-2xl border border-slate-200">
-                            <BookOpen className="h-6 w-6 text-slate-400" />
-                        </div>
-                        <div className="flex-1" >
-                            <h4 className="text-sm font-black text-slate-500">Buku KIA Digital</h4>
-                            <p className="text-[11px] text-slate-400 font-medium mt-0.5" >Fitur eksklusif akan segera hadir</p>
-                        </div>
-                        <div className="flex items-center gap-2" >
-                            <span className="bg-slate-200 text-slate-500 text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-tighter" >
-                                Locked
-                            </span>
-                        </div>
-                    </div>
                 </div>
             </div>
 

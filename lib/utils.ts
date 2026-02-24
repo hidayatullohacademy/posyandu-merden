@@ -61,10 +61,12 @@ export function generateTempNIK(tahun: number, nomorUrut: number): string {
 /**
  * Hitung usia dalam bulan dari tanggal lahir
  */
-export function hitungUsiaBulan(tanggalLahir: string | Date): number {
+export function hitungUsiaBulan(tanggalLahir: string | Date, targetMonth?: number, targetYear?: number): number {
     const lahir = typeof tanggalLahir === 'string' ? new Date(tanggalLahir) : tanggalLahir;
     const now = new Date();
-    const months = (now.getFullYear() - lahir.getFullYear()) * 12 + (now.getMonth() - lahir.getMonth());
+    const year = targetYear ?? now.getFullYear();
+    const month = (targetMonth !== undefined) ? (targetMonth - 1) : now.getMonth();
+    const months = (year - lahir.getFullYear()) * 12 + (month - lahir.getMonth());
     return Math.max(0, months);
 }
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Baby, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { cn, hitungUsiaBulan, formatNumber } from '@/lib/utils';
+import { cn, hitungUsiaBulan, formatNumber, formatUsiaDetail } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 

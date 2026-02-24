@@ -45,7 +45,7 @@ export default function OrtuNotifikasiPage() {
                 return;
             }
 
-            const balitaIds = links.map(l => l.balita_id);
+            const balitaIds = links.map((l: any) => l.balita_id);
 
             // Fetch notifications for these children
             const { data, error } = await supabase

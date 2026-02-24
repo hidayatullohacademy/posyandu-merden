@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { createClient } from '@/lib/supabase';
-import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCircle, Syringe, Clock } from 'lucide-react';
+import { ArrowLeft, Scale, Plus, X, TrendingUp, Calendar, Edit2, Trash2, AlertCircle, Syringe, Clock, Activity } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -613,7 +613,7 @@ export default function BalitaDetailPage({ params }: { params: Promise<{ id: str
                         </div>
                     ) : (
                         <div className="py-4 text-center">
-                            <p className="text-xs text-slate-400 italic">Klik tombol "+" di bawah untuk input data</p>
+                            <p className="text-xs text-slate-400 italic">Klik tombol &quot;+&quot; di bawah untuk input data</p>
                         </div>
                     )}
                 </Card>

@@ -9,6 +9,7 @@ import Link from 'next/link';
 export function SecurityBanner() {
     const [isVisible, setIsVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [pengaturanHref, setPengaturanHref] = useState('/kader/pengaturan');
     const supabase = createClient();
 
     useEffect(() => {
@@ -22,11 +23,20 @@ export function SecurityBanner() {
 
                 const { data, error } = await supabase
                     .from('users')
-                    .select('is_default_password')
+                    .select('is_default_password, role')
                     .eq('id', user.id)
                     .single();
 
                 if (error) throw error;
+
+                // Set the correct settings URL based on user role
+                if (data?.role === 'ADMIN') {
+                    setPengaturanHref('/admin/pengaturan');
+                } else if (data?.role === 'ORANG_TUA') {
+                    setPengaturanHref('/ortu/pengaturan');
+                } else {
+                    setPengaturanHref('/kader/pengaturan');
+                }
 
                 if (data?.is_default_password) {
                     setIsVisible(true);
@@ -42,6 +52,7 @@ export function SecurityBanner() {
     }, [supabase]);
 
     if (!isVisible || isLoading) return null;
+
 
     return (
         <div className="bg-amber-500 text-white px-4 py-2.5 flex items-center justify-between gap-3 animate-slide-down relative z-[60] shadow-lg">
@@ -59,7 +70,7 @@ export function SecurityBanner() {
 
             <div className="flex items-center gap-2 shrink-0">
                 <Link
-                    href="/pengaturan"
+                    href={pengaturanHref}
                     className="bg-white text-amber-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-amber-50 transition-colors flex items-center gap-1 shadow-sm"
                 >
                     Ganti <ChevronRight className="h-3 w-3" />

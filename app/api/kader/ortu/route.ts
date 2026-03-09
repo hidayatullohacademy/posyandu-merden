@@ -49,9 +49,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Minimal satu balita harus dipilih' }, { status: 400 });
         }
 
-        // Auto-generate email based on NIK if not provided
-        const email = `${nik}@posyandu.local`;
-        const password = 'merden12345';
+        // Auto-generate email based on No HP if not provided
+        const email = `${no_hp.trim()}@posyandu.local`;
+        const password = '12345678';
 
         // 4. Create User in Auth
         const { data: newAuthData, error: authError } = await supabaseAdmin.auth.admin.createUser({

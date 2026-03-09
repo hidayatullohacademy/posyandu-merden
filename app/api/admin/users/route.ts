@@ -22,13 +22,14 @@ export async function POST(request: Request) {
 
         const body = await request.json();
         const { email, password, userData } = body;
+        const trimmedEmail = email?.trim();
 
         // 1. Create User in Auth
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-            email,
+            email: trimmedEmail,
             password,
             email_confirm: true,
-            user_metadata: { full_name: userData.nama_lengkap }
+            user_metadata: { full_name: userData.nama_lengkap?.trim() }
         });
 
         if (authError) throw authError;

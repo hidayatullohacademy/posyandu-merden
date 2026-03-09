@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
     try {
-        const { identifier } = await request.json();
+        let { identifier } = await request.json();
+        identifier = identifier?.trim();
 
         if (!identifier) {
             return NextResponse.json({ error: 'Identifier dibutuhkan' }, { status: 400 });

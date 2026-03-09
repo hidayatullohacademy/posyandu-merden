@@ -54,7 +54,7 @@ export async function POST(request: Request) {
                         id: authData.user.id,
                         nama_lengkap: user.nama_lengkap.trim(),
                         no_hp: user.no_hp.trim(),
-                        nik: user.nik?.trim() || null,
+                        nik: user.nik?.toString().trim() || null,
                         role: user.role,
                         posyandu_id: user.posyandu_id || null,
                         status: 'AKTIF',

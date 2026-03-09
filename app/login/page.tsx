@@ -50,7 +50,7 @@ export default function LoginPage() {
             const response = await fetch('/api/auth/lookup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identifier: formData.identifier })
+                body: JSON.stringify({ identifier: formData.identifier.trim() })
             });
 
             if (!response.ok) {

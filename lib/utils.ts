@@ -61,8 +61,10 @@ export function generateTempNIK(tahun: number, nomorUrut: number): string {
 /**
  * Hitung usia dalam bulan dari tanggal lahir
  */
-export function hitungUsiaBulan(tanggalLahir: string | Date, targetMonth?: number, targetYear?: number): number {
+export function hitungUsiaBulan(tanggalLahir: string | Date | null | undefined, targetMonth?: number, targetYear?: number): number {
+    if (!tanggalLahir) return 0;
     const lahir = typeof tanggalLahir === 'string' ? new Date(tanggalLahir) : tanggalLahir;
+    if (isNaN(lahir.getTime())) return 0;
     const now = new Date();
     const year = targetYear ?? now.getFullYear();
     const month = (targetMonth !== undefined) ? (targetMonth - 1) : now.getMonth();
@@ -73,8 +75,10 @@ export function hitungUsiaBulan(tanggalLahir: string | Date, targetMonth?: numbe
 /**
  * Hitung usia dalam tahun
  */
-export function hitungUsiaTahun(tanggalLahir: string | Date): number {
+export function hitungUsiaTahun(tanggalLahir: string | Date | null | undefined): number {
+    if (!tanggalLahir) return 0;
     const lahir = typeof tanggalLahir === 'string' ? new Date(tanggalLahir) : tanggalLahir;
+    if (isNaN(lahir.getTime())) return 0;
     const now = new Date();
     let age = now.getFullYear() - lahir.getFullYear();
     const monthDiff = now.getMonth() - lahir.getMonth();
@@ -87,8 +91,10 @@ export function hitungUsiaTahun(tanggalLahir: string | Date): number {
 /**
  * Hitung usia detail (tahun, bulan, hari)
  */
-export function hitungUsiaDetail(tanggalLahir: string | Date) {
+export function hitungUsiaDetail(tanggalLahir: string | Date | null | undefined) {
+    if (!tanggalLahir) return { tahun: 0, bulan: 0, hari: 0 };
     const lahir = typeof tanggalLahir === 'string' ? new Date(tanggalLahir) : tanggalLahir;
+    if (isNaN(lahir.getTime())) return { tahun: 0, bulan: 0, hari: 0 };
     const sekarang = new Date();
 
     let tahun = sekarang.getFullYear() - lahir.getFullYear();
@@ -113,7 +119,8 @@ export function hitungUsiaDetail(tanggalLahir: string | Date) {
 /**
  * Format usia detail menjadi string "X thn Y bln Z hari"
  */
-export function formatUsiaDetail(tanggalLahir: string | Date): string {
+export function formatUsiaDetail(tanggalLahir: string | Date | null | undefined): string {
+    if (!tanggalLahir) return '-';
     const { tahun, bulan, hari } = hitungUsiaDetail(tanggalLahir);
     const parts = [];
     
